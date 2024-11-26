@@ -11,10 +11,10 @@ package openapi
 
 import (
 	"context"
+	openapiclient "github.com/opengovern/og-describer-openai"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_openapi_FineTuningAPIService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService CancelFineTuningJob", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var fineTuningJobId string
 
@@ -38,7 +38,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService CreateFineTuningJob", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.FineTuningAPI.CreateFineTuningJob(context.Background()).Execute()
 
@@ -50,7 +50,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService ListFineTuningEvents", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var fineTuningJobId string
 
@@ -64,7 +64,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService ListFineTuningJobCheckpoints", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var fineTuningJobId string
 
@@ -78,7 +78,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService ListPaginatedFineTuningJobs", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.FineTuningAPI.ListPaginatedFineTuningJobs(context.Background()).Execute()
 
@@ -90,7 +90,7 @@ func Test_openapi_FineTuningAPIService(t *testing.T) {
 
 	t.Run("Test FineTuningAPIService RetrieveFineTuningJob", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var fineTuningJobId string
 

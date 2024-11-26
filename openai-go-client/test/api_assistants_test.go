@@ -11,10 +11,10 @@ package openapi
 
 import (
 	"context"
+	openapiclient "github.com/opengovern/og-describer-openai"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_openapi_AssistantsAPIService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CancelRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string
@@ -39,7 +39,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CreateAssistant", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AssistantsAPI.CreateAssistant(context.Background()).Execute()
 
@@ -51,7 +51,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CreateMessage", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -65,7 +65,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CreateRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -79,7 +79,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CreateThread", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AssistantsAPI.CreateThread(context.Background()).Execute()
 
@@ -91,7 +91,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService CreateThreadAndRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AssistantsAPI.CreateThreadAndRun(context.Background()).Execute()
 
@@ -103,7 +103,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService DeleteAssistant", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var assistantId string
 
@@ -117,7 +117,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService DeleteMessage", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var messageId string
@@ -132,7 +132,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService DeleteThread", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -146,7 +146,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService GetAssistant", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var assistantId string
 
@@ -160,7 +160,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService GetMessage", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var messageId string
@@ -175,7 +175,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService GetRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string
@@ -190,7 +190,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService GetRunStep", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string
@@ -206,7 +206,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService GetThread", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -220,7 +220,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ListAssistants", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.AssistantsAPI.ListAssistants(context.Background()).Execute()
 
@@ -232,7 +232,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ListMessages", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -246,7 +246,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ListRunSteps", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string
@@ -261,7 +261,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ListRuns", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -275,7 +275,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ModifyAssistant", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var assistantId string
 
@@ -289,7 +289,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ModifyMessage", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var messageId string
@@ -304,7 +304,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ModifyRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string
@@ -319,7 +319,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService ModifyThread", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 
@@ -333,7 +333,7 @@ func Test_openapi_AssistantsAPIService(t *testing.T) {
 
 	t.Run("Test AssistantsAPIService SubmitToolOuputsToRun", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var threadId string
 		var runId string

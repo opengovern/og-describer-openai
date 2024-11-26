@@ -11,10 +11,10 @@ package openapi
 
 import (
 	"context"
+	openapiclient "github.com/opengovern/og-describer-openai"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_openapi_UsersAPIService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_openapi_UsersAPIService(t *testing.T) {
 
 	t.Run("Test UsersAPIService DeleteUser", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var userId string
 
@@ -38,7 +38,7 @@ func Test_openapi_UsersAPIService(t *testing.T) {
 
 	t.Run("Test UsersAPIService ListUsers", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.UsersAPI.ListUsers(context.Background()).Execute()
 
@@ -50,7 +50,7 @@ func Test_openapi_UsersAPIService(t *testing.T) {
 
 	t.Run("Test UsersAPIService ModifyUser", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var userId string
 
@@ -64,7 +64,7 @@ func Test_openapi_UsersAPIService(t *testing.T) {
 
 	t.Run("Test UsersAPIService RetrieveUser", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		var userId string
 
