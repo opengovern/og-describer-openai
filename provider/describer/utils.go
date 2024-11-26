@@ -3,7 +3,7 @@ package describer
 import (
 	"context"
 	"errors"
-	openai "github.com/opengovern/og-describer-template/openai-go-client"
+	openai "github.com/opengovern/og-describer-openai/openai-go-client"
 	"golang.org/x/time/rate"
 	"net/http"
 	"strconv"

@@ -2,9 +2,9 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-template/openai-go-client"
-	"github.com/opengovern/og-describer-template/pkg/sdk/models"
-	"github.com/opengovern/og-describer-template/provider/model"
+	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
+	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
 	"sync"
 )

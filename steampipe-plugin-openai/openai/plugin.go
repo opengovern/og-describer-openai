@@ -2,6 +2,7 @@ package openai
 
 import (
 	"context"
+	essdk "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
@@ -10,24 +11,46 @@ import (
 func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{
 		Name: "steampipe-plugin-openai",
-		ConnectionKeyColumns: []plugin.ConnectionKeyColumn{
-			{
-				Name:    "org_id",
-				Hydrate: getOrganizationId,
-			},
-		},
 		ConnectionConfigSchema: &plugin.ConnectionConfigSchema{
-			NewInstance: ConfigInstance,
+			NewInstance: essdk.ConfigInstance,
+			Schema:      essdk.ConfigSchema(),
 		},
-		DefaultTransform: transform.FromGo().NullIfZero(),
-		DefaultGetConfig: &plugin.GetConfig{
-			ShouldIgnoreError: isNotFoundError,
-		},
+		DefaultTransform: transform.FromCamel(),
 		TableMap: map[string]*plugin.Table{
 			"openai_completion": tableOpenAiCompletion(ctx),
 			"openai_file":       tableOpenAiFile(ctx),
 			"openai_model":      tableOpenAiModel(ctx),
 		},
+	}
+	for key, table := range p.TableMap {
+		if table == nil {
+			continue
+		}
+		if table.Get != nil && table.Get.Hydrate == nil {
+			delete(p.TableMap, key)
+			continue
+		}
+		if table.List != nil && table.List.Hydrate == nil {
+			delete(p.TableMap, key)
+			continue
+		}
+
+		opengovernanceTable := false
+		for _, col := range table.Columns {
+			if col != nil && col.Name == "og_account_id" {
+				opengovernanceTable = true
+			}
+		}
+
+		if opengovernanceTable {
+			if table.Get != nil {
+				table.Get.KeyColumns = append(table.Get.KeyColumns, plugin.OptionalColumns([]string{"og_account_id", "og_resource_id"})...)
+			}
+
+			if table.List != nil {
+				table.List.KeyColumns = append(table.List.KeyColumns, plugin.OptionalColumns([]string{"og_account_id", "og_resource_id"})...)
+			}
+		}
 	}
 	return p
 }

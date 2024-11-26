@@ -3,7 +3,7 @@
 package model
 
 import (
-	openai "github.com/opengovern/og-describer-template/openai-go-client"
+	openai "github.com/opengovern/og-describer-openai/openai-go-client"
 	"time"
 )
 
