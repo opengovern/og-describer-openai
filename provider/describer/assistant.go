@@ -35,7 +35,7 @@ func GetAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID str
 	if err != nil {
 		return nil, err
 	}
-	createdAt := unixToTimestamp(assistant.CreatedAt)
+	//createdAt := unixToTimestamp(assistant.CreatedAt)
 	var name string
 	if assistant.Name.IsSet() {
 		name = *assistant.Name.Get()
@@ -65,9 +65,9 @@ func GetAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID str
 		Name: name,
 		Description: JSONAllFieldsMarshaller{
 			Value: model.AssistantDescription{
-				ID:             assistant.Id,
-				Object:         assistant.Object,
-				CreatedAt:      createdAt,
+				ID: assistant.Id,
+				//Object:         assistant.Object,
+				//CreatedAt:      createdAt,
 				Name:           name,
 				Description:    description,
 				Model:          assistant.Model,
@@ -100,7 +100,7 @@ func processAssistants(ctx context.Context, handler *OpenAIAPIHandler, openaiCha
 		wg.Add(1)
 		go func(assistant openai.AssistantObject) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(assistant.CreatedAt)
+			//createdAt := unixToTimestamp(assistant.CreatedAt)
 			var name string
 			if assistant.Name.IsSet() {
 				name = *assistant.Name.Get()
@@ -130,9 +130,9 @@ func processAssistants(ctx context.Context, handler *OpenAIAPIHandler, openaiCha
 				Name: name,
 				Description: JSONAllFieldsMarshaller{
 					Value: model.AssistantDescription{
-						ID:             assistant.Id,
-						Object:         assistant.Object,
-						CreatedAt:      createdAt,
+						ID: assistant.Id,
+						//Object:         assistant.Object,
+						//CreatedAt:      createdAt,
 						Name:           name,
 						Description:    description,
 						Model:          assistant.Model,

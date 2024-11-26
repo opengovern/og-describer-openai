@@ -40,7 +40,7 @@ func GetModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string)
 		ID:   modelData.Id,
 		Name: modelData.Id,
 		Description: JSONAllFieldsMarshaller{
-			Value: model.ModelDescription{
+			Value: model.ModelsDescription{
 				ID:        modelData.Id,
 				CreatedAt: createdAt,
 				Object:    modelData.Object,
@@ -72,7 +72,7 @@ func processModels(ctx context.Context, handler *OpenAIAPIHandler, openaiChan ch
 				ID:   modelData.Id,
 				Name: modelData.Id,
 				Description: JSONAllFieldsMarshaller{
-					Value: model.ModelDescription{
+					Value: model.ModelsDescription{
 						ID:        modelData.Id,
 						CreatedAt: createdAt,
 						Object:    modelData.Object,

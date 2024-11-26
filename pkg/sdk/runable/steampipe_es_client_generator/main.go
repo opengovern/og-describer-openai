@@ -47,7 +47,7 @@ func main() {
 		output = &v
 	}
 	if file == nil || len(*file) == 0 {
-		v := "../../../../provider/model/model.go"
+		v := "../../../../provider/model/models.go"
 		file = &v
 	}
 

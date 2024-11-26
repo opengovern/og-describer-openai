@@ -18,7 +18,7 @@ type FileDescription struct {
 	Purpose   string
 }
 
-type ModelDescription struct {
+type ModelsDescription struct {
 	ID        string
 	CreatedAt time.Time
 	Object    string
@@ -26,9 +26,9 @@ type ModelDescription struct {
 }
 
 type AssistantDescription struct {
-	ID             string
-	Object         string
-	CreatedAt      time.Time
+	ID string
+	//Object         string
+	//CreatedAt      time.Time
 	Name           string
 	Description    string
 	Model          string
@@ -65,12 +65,13 @@ type ProjectDescription struct {
 }
 
 type ProjectUserDescription struct {
-	Object  string
-	ID      string
-	Name    string
-	Email   string
-	Role    string
-	AddedAt time.Time
+	UserID    string
+	ProjectID string
+	//Object  string
+	//Name    string
+	//Email   string
+	//Role    string
+	//AddedAt time.Time
 }
 
 type ProjectServiceAccountDescription struct {

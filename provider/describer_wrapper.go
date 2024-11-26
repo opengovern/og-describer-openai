@@ -23,22 +23,22 @@ func DescribeListByOpenAI(describe func(context.Context, *describer.OpenAIAPIHan
 		if apiKey == "" {
 			return nil, errors.New("api_key must be configured")
 		}
-		organizationID := cfg.OrganizationID
-		if organizationID == "" {
-			return nil, errors.New("organization ID must be configured")
-		}
-		projectID := cfg.ProjectID
+		//organizationID := cfg.OrganizationID
+		//if organizationID == "" {
+		//	return nil, errors.New("organization ID must be configured")
+		//}
+		//projectID := cfg.ProjectID
 		// Create openai configs
 		config := openai.NewConfiguration()
 		config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey))
-		config.AddDefaultHeader("OpenAI-Organization", organizationID)
-		config.AddDefaultHeader("OpenAI-Project", projectID)
+		//config.AddDefaultHeader("OpenAI-Organization", organizationID)
+		//config.AddDefaultHeader("OpenAI-Project", projectID)
 
 		// Create openai client
 		client := openai.NewAPIClient(config)
 
 		// Create openai handler
-		openAIAPIHandler := describer.NewOpenAIAPIHandler(client, projectID, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
+		openAIAPIHandler := describer.NewOpenAIAPIHandler(client, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
 
 		// Get values from describer
 		var values []model.Resource
@@ -61,22 +61,22 @@ func DescribeSingleByOpenAI(describe func(context.Context, *describer.OpenAIAPIH
 		if apiKey == "" {
 			return nil, errors.New("api_key must be configured")
 		}
-		organizationID := cfg.OrganizationID
-		if organizationID == "" {
-			return nil, errors.New("organization ID must be configured")
-		}
-		projectID := cfg.ProjectID
+		//organizationID := cfg.OrganizationID
+		//if organizationID == "" {
+		//	return nil, errors.New("organization ID must be configured")
+		//}
+		//projectID := cfg.ProjectID
 		// Create openai configs
 		config := openai.NewConfiguration()
-		config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey))
-		config.AddDefaultHeader("OpenAI-Organization", organizationID)
-		config.AddDefaultHeader("OpenAI-Project", projectID)
+		//config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+		//config.AddDefaultHeader("OpenAI-Organization", organizationID)
+		//config.AddDefaultHeader("OpenAI-Project", projectID)
 
 		// Create openai client
 		client := openai.NewAPIClient(config)
 
 		// Create openai handler
-		openAIAPIHandler := describer.NewOpenAIAPIHandler(client, projectID, rate.Every(time.Second), 1, 10, 5, 5*time.Minute)
+		openAIAPIHandler := describer.NewOpenAIAPIHandler(client, rate.Every(time.Second), 1, 10, 5, 5*time.Minute)
 
 		// Get value from describer
 		value, err := describe(ctx, openAIAPIHandler, resourceID)

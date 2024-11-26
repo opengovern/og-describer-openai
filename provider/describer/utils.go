@@ -11,23 +11,37 @@ import (
 )
 
 type OpenAIAPIHandler struct {
-	Client       *openai.APIClient
-	ProjectID    string
+	Client *openai.APIClient
+	//ProjectID    string
 	RateLimiter  *rate.Limiter
 	Semaphore    chan struct{}
 	MaxRetries   int
 	RetryBackoff time.Duration
 }
 
-func NewOpenAIAPIHandler(client *openai.APIClient, projectID string, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
+func NewOpenAIAPIHandler(client *openai.APIClient, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
 	return &OpenAIAPIHandler{
 		Client:       client,
-		ProjectID:    projectID,
 		RateLimiter:  rate.NewLimiter(rateLimit, burst),
 		Semaphore:    make(chan struct{}, maxConcurrency),
 		MaxRetries:   maxRetries,
 		RetryBackoff: retryBackoff,
 	}
+}
+
+func getProjects(ctx context.Context, handler *OpenAIAPIHandler) ([]openai.Project, error) {
+	var projects *openai.ProjectListResponse
+	var resp *http.Response
+	requestFunc := func() (*http.Response, error) {
+		var e error
+		projects, resp, e = handler.Client.ProjectsAPI.ListProjects(ctx).Execute()
+		return resp, e
+	}
+	err := handler.DoRequest(ctx, requestFunc)
+	if err != nil {
+		return nil, err
+	}
+	return projects.Data, nil
 }
 
 // DoRequest executes the openai API request with rate limiting, retries, and concurrency control.
