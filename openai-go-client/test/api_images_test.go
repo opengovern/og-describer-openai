@@ -11,10 +11,10 @@ package openapi
 
 import (
 	"context"
+	openapiclient "github.com/opengovern/og-describer-openai/openai-go-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
-	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
 )
 
 func Test_openapi_ImagesAPIService(t *testing.T) {
@@ -24,7 +24,7 @@ func Test_openapi_ImagesAPIService(t *testing.T) {
 
 	t.Run("Test ImagesAPIService CreateImage", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ImagesAPI.CreateImage(context.Background()).Execute()
 
@@ -36,7 +36,7 @@ func Test_openapi_ImagesAPIService(t *testing.T) {
 
 	t.Run("Test ImagesAPIService CreateImageEdit", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ImagesAPI.CreateImageEdit(context.Background()).Execute()
 
@@ -48,7 +48,7 @@ func Test_openapi_ImagesAPIService(t *testing.T) {
 
 	t.Run("Test ImagesAPIService CreateImageVariation", func(t *testing.T) {
 
-		t.Skip("skip test")  // remove to run test
+		t.Skip("skip test") // remove to run test
 
 		resp, httpRes, err := apiClient.ImagesAPI.CreateImageVariation(context.Background()).Execute()
 
