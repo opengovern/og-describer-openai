@@ -70,8 +70,7 @@ func main() {
 
 	// Set default output paths if not provided
 	if output == nil || len(*output) == 0 {
-		//v := "../../../../provider/resource_types.go"
-		v := "C:\\Users\\ASUS\\GolandProjects\\og-describer-openai\\provider\\resource_types.go"
+		v := "../../../../provider/resource_types.go"
 		output = &v
 	}
 

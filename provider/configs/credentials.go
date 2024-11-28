@@ -1,6 +1,7 @@
 package configs
 
+import "github.com/opengovern/opencomply/services/integration/integration-type/openai-project/configs"
+
 type IntegrationCredentials struct {
-	APIKey         string `json:"api_key"`
-	OrganizationID string `json:"organization_id"`
+	configs.IntegrationCredentials
 }

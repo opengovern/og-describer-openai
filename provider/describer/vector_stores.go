@@ -8,19 +8,16 @@ import (
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
 	"net/url"
-	"sync"
 )
 
 func ListVectorStores(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
-	var wg sync.WaitGroup
-	openaiChan := make(chan models.Resource)
-	go func() {
-		processVectorStores(ctx, handler, openaiChan, &wg)
-		wg.Wait()
-		close(openaiChan)
-	}()
+	results, err := processVectorStores(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
+
 	var values []models.Resource
-	for value := range openaiChan {
+	for _, value := range results {
 		if stream != nil {
 			if err := (*stream)(value); err != nil {
 				return nil, err
@@ -47,75 +44,77 @@ func GetVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID s
 	return &value, nil
 }
 
-func processVectorStores(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+func processVectorStores(ctx context.Context, handler *OpenAIAPIHandler) ([]models.Resource, error) {
 	var vectorStores []model.VectorStoreDescription
 	var vectorStoreResponse model.VectorStoreResponse
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/vector_stores"
-	requestFunc := func(req *http.Request) (*http.Response, error) {
-		var e error
-		var after string
-		for {
-			params := url.Values{}
-			params.Set("limit", "100")
-			if after != "" {
-				params.Set("after", after)
-			}
-			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
-			req, e = http.NewRequest("GET", finalURL, nil)
-			if e != nil {
-				return nil, e
-			}
+
+	var after string
+	for {
+		params := url.Values{}
+		params.Set("limit", "100")
+		if after != "" {
+			params.Set("after", after)
+		}
+		finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+		req, e := http.NewRequest("GET", finalURL, nil)
+		if e != nil {
+			return nil, e
+		}
+		req.Header.Set("OpenAI-Beta", "assistants=v2")
+		requestFunc := func(req *http.Request) (*http.Response, error) {
+			var e error
 			resp, e = handler.Client.Do(req)
 			if e = json.NewDecoder(resp.Body).Decode(&vectorStoreResponse); e != nil {
 				return nil, e
 			}
 			vectorStores = append(vectorStores, vectorStoreResponse.Data...)
-			if !vectorStoreResponse.HasMore {
-				break
-			}
-			after = vectorStoreResponse.LastID
+
+			return resp, e
 		}
-		return resp, e
+		err := handler.DoRequest(ctx, req, requestFunc)
+		if err != nil {
+			return nil, err
+		}
+		if !vectorStoreResponse.HasMore {
+			break
+		}
+		after = vectorStoreResponse.LastID
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
-	if err != nil {
-		return
-	}
+
+	var values []models.Resource
 	for _, vectorStore := range vectorStores {
-		wg.Add(1)
-		go func(vectorStore model.VectorStoreDescription) {
-			defer wg.Done()
-			value := models.Resource{
-				ID:   vectorStore.ID,
-				Name: vectorStore.Name,
-				Description: JSONAllFieldsMarshaller{
-					Value: vectorStore,
-				},
-			}
-			openaiChan <- value
-		}(vectorStore)
+		value := models.Resource{
+			ID:   vectorStore.ID,
+			Name: vectorStore.Name,
+			Description: JSONAllFieldsMarshaller{
+				Value: vectorStore,
+			},
+		}
+		values = append(values, value)
 	}
+	return values, nil
 }
 
 func processVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*model.VectorStoreDescription, error) {
 	var vectorStore *model.VectorStoreDescription
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/vector_stores/"
+	finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+	req, e := http.NewRequest("GET", finalURL, nil)
+	if e != nil {
+		return nil, e
+	}
 	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
-		req, e = http.NewRequest("GET", finalURL, nil)
-		if e != nil {
-			return nil, e
-		}
 		resp, e = handler.Client.Do(req)
 		if e = json.NewDecoder(resp.Body).Decode(vectorStore); e != nil {
 			return nil, e
 		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
+	err := handler.DoRequest(ctx, req, requestFunc)
 	if err != nil {
 		return nil, err
 	}
