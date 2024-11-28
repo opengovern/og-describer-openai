@@ -7,19 +7,16 @@ import (
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
-	"sync"
 )
 
 func ListModels(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
-	var wg sync.WaitGroup
-	openaiChan := make(chan models.Resource)
-	go func() {
-		processModels(ctx, handler, openaiChan, &wg)
-		wg.Wait()
-		close(openaiChan)
-	}()
+	resources, err := processModels(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
+
 	var values []models.Resource
-	for value := range openaiChan {
+	for _, value := range resources {
 		if stream != nil {
 			if err := (*stream)(value); err != nil {
 				return nil, err
@@ -46,40 +43,38 @@ func GetModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string)
 	return &value, nil
 }
 
-func processModels(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+func processModels(ctx context.Context, handler *OpenAIAPIHandler) ([]models.Resource, error) {
 	var modelResponse model.ModelsResponse
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/models"
+	req, err := http.NewRequest("GET", baseURL, nil)
+	if err != nil {
+		return nil, err
+	}
 	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		req, e = http.NewRequest("GET", baseURL, nil)
-		if e != nil {
-			return nil, e
-		}
 		resp, e = handler.Client.Do(req)
 		if e = json.NewDecoder(resp.Body).Decode(&modelResponse); e != nil {
 			return nil, e
 		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
+	err = handler.DoRequest(ctx, req, requestFunc)
 	if err != nil {
-		return
+		return nil, err
 	}
+	var resources []models.Resource
 	for _, modelData := range modelResponse.Data {
-		wg.Add(1)
-		go func(modelData model.ModelsDescription) {
-			defer wg.Done()
-			value := models.Resource{
-				ID:   modelData.ID,
-				Name: modelData.ID,
-				Description: JSONAllFieldsMarshaller{
-					Value: modelData,
-				},
-			}
-			openaiChan <- value
-		}(modelData)
+		value := models.Resource{
+			ID:   modelData.ID,
+			Name: modelData.ID,
+			Description: JSONAllFieldsMarshaller{
+				Value: modelData,
+			},
+		}
+		resources = append(resources, value)
 	}
+	return resources, nil
 }
 
 func processModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*model.ModelsDescription, error) {
