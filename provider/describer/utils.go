@@ -91,7 +91,9 @@ func (h *OpenAIAPIHandler) DoRequest(ctx context.Context, req *http.Request, req
 		// Set request headers
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", h.APIKey))
-		req.Header.Set("OpenAI-Organization", h.OrganizationID)
+		if h.OrganizationID != "" {
+			req.Header.Set("OpenAI-Organization", h.OrganizationID)
+		}
 		// Execute the request function
 		resp, err = requestFunc(req)
 		if err == nil {
@@ -147,12 +149,4 @@ func isTemporary(err error) bool {
 		return netErr.Temporary()
 	}
 	return false
-}
-
-func unixToTimestamp(timeInt int32) time.Time {
-	if timeInt == 0 {
-		return time.Time{}
-	}
-	t := time.Unix(int64(timeInt), 0)
-	return t
 }
