@@ -12,14 +12,12 @@ require (
 	github.com/nats-io/nats.go v1.36.0
 	github.com/opengovern/og-util v1.1.5
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.10.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.8.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.27.0
 	golang.org/x/oauth2 v0.21.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
-	gopkg.in/validator.v2 v2.0.1
 )
 
 require (
@@ -146,12 +144,10 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/opengovern/og-describer-openai/openai-go-client v0.0.0-20241127171858-d3785a5dbdb2 // indirect
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0 // indirect
 	github.com/pganalyze/pg_query_go/v4 v4.2.3 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.19.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.53.0 // indirect
@@ -161,6 +157,7 @@ require (
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stevenle/topsort v0.2.0 // indirect
+	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/tkrajina/go-reflector v0.5.6 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
@@ -194,7 +191,6 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apimachinery v0.30.2 // indirect
 	k8s.io/client-go v0.30.2 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
