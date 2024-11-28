@@ -40,7 +40,7 @@ func DescribeListByOpenAI(describe func(context.Context, *describer.OpenAIAPIHan
 
 // DescribeSingleByOpenAI A wrapper to pass openai authorization to describer get functions
 func DescribeSingleByOpenAI(describe func(context.Context, *describer.OpenAIAPIHandler, string) (*model.Resource, error)) model.SingleResourceDescriber {
-	return func(ctx context.Context, cfg configs.IntegrationCredentials, triggerType enums.DescribeTriggerType, additionalParameters map[string]string, resourceID string) (*model.Resource, error) {
+	return func(ctx context.Context, cfg configs.IntegrationCredentials, triggerType enums.DescribeTriggerType, resourceID string, additionalParameters map[string]string) (*model.Resource, error) {
 		ctx = describer.WithTriggerType(ctx, triggerType)
 
 		// Get apikey and check it has value
