@@ -36,7 +36,7 @@
   },
   {
     "ResourceName": "OpenAI/Model",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListModel)",
+    "ListDescriber": "DescribeListByOpenAI(describer.ListModels)",
     "GetDescriber": "DescribeSingleByOpenAI(describer.GetModel)",
     "SteampipeTable": "openai_model",
     "Model": "Models"
