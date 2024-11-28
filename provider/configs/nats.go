@@ -1,9 +1,9 @@
 package configs
 
 const (
-	StreamName           = "stream_name"
-	JobQueueTopic        = "job_queue_topic"
-	ConsumerGroup        = "consumer-group"
-	JobQueueTopicManuals = "job_queue_topic_manuals"
-	ConsumerGroupManuals = "consumer-group-manuals"
+	StreamName           = "og_describer_openai"
+	JobQueueTopic        = "og_describer_openai_job_queue"
+	ConsumerGroup        = "describer-openai"
+	JobQueueTopicManuals = "og_describer_openai_manuals_job_queue"
+	ConsumerGroupManuals = "describer-openai-manuals"
 )

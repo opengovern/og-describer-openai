@@ -17,9 +17,15 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 		},
 		DefaultTransform: transform.FromCamel(),
 		TableMap: map[string]*plugin.Table{
-			"openai_completion": tableOpenAiCompletion(ctx),
-			"openai_file":       tableOpenAiFile(ctx),
-			"openai_model":      tableOpenAiModel(ctx),
+			"openai_file":                    tableOpenAiFile(ctx),
+			"openai_model":                   tableOpenAiModel(ctx),
+			"openai_project":                 tableOpenAiProject(ctx),
+			"openai_project_user":            tableOpenAiProjectUser(ctx),
+			"openai_project_api_key":         tableOpenAiProjectApiKey(ctx),
+			"openai_project_rate_limit":      tableOpenAiProjectRateLimit(ctx),
+			"openai_project_service_account": tableOpenAiProjectServiceAccount(ctx),
+			"openai_vector_store":            tableOpenAiVectorStore(ctx),
+			"openai_assistant":               tableOpenAiAssistant(ctx),
 		},
 	}
 	for key, table := range p.TableMap {

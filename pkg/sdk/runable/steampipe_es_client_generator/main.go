@@ -23,7 +23,7 @@ var (
 	pluginPath        = flag.String("pluginPath", "", "Location of the steampipe plugin")
 )
 
-const PluginPath = ""
+const PluginPath = "../../../../steampipe-plugin-openai/openai" // TODO: change to steampipe plugin
 
 type IntegrationType struct {
 	Name            string
@@ -47,7 +47,7 @@ func main() {
 		output = &v
 	}
 	if file == nil || len(*file) == 0 {
-		v := "../../../../provider/model/models.go"
+		v := "../../../../provider/model/model.go"
 		file = &v
 	}
 
@@ -399,12 +399,9 @@ func Get{{ .Name }}(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateD
 		fmt.Fprintln(&buf, `
 		import (
 			"context"
-			"encoding/json"
-			"fmt"
 			essdk "github.com/opengovern/og-util/pkg/opengovernance-es-sdk"
 			steampipesdk "github.com/opengovern/og-util/pkg/steampipe"
 			"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-			`+configs.IntegrationTypeLower+`Describer "`+configs.OGPluginRepoURL+`/provider/describer"
 			`+configs.IntegrationTypeLower+` "`+configs.OGPluginRepoURL+`/provider/model"
             "runtime"
 		)

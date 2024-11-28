@@ -84,11 +84,10 @@ func processProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, project
 					Value: model.ProjectUserDescription{
 						UserID:    projectUser.ID,
 						ProjectID: projectID,
-						//Object:  projectUser.Object,
-						//Name:    projectUser.Name,
-						//Email:   projectUser.Email,
-						//Role:    projectUser.Role,
-						//AddedAt: addedAt,
+						Object:    projectUser.Object,
+						Name:      projectUser.Name,
+						Email:     projectUser.Email,
+						Role:      projectUser.Role,
 					},
 				},
 			}
