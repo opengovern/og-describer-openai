@@ -2,10 +2,12 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
@@ -18,7 +20,7 @@ func ListProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, stream *mo
 	}
 	go func() {
 		for _, project := range projects {
-			processProjectUsers(ctx, handler, project.Id, openaiChan, &wg)
+			processProjectUsers(ctx, handler, project.ID, openaiChan, &wg)
 		}
 		wg.Wait()
 		close(openaiChan)
@@ -36,55 +38,53 @@ func ListProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, stream *mo
 	return values, nil
 }
 
-//func GetProjectUser(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*models.Resource, error) {
-//	projectUser, err := processProjectUser(ctx, handler, resourceID)
-//	if err != nil {
-//		return nil, err
-//	}
-//	addedAt := unixToTimestamp(projectUser.AddedAt)
-//	value := models.Resource{
-//		ID:   projectUser.Id,
-//		Name: projectUser.Name,
-//		Description: JSONAllFieldsMarshaller{
-//			Value: model.ProjectUserDescription{
-//				Object:  projectUser.Object,
-//				ID:      projectUser.Id,
-//				Name:    projectUser.Name,
-//				Email:   projectUser.Email,
-//				Role:    projectUser.Role,
-//				AddedAt: addedAt,
-//			},
-//		},
-//	}
-//	return &value, nil
-//}
-
 func processProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, projectID string, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var projectUsers *openai.ProjectUserListResponse
+	var projectUsers []model.ProjectUser
+	var projectUserResponse model.ProjectUserResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/organization/projects/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		projectUsers, resp, e = handler.Client.ProjectsAPI.ListProjectUsers(ctx, projectID).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s%s/users?%s", baseURL, projectID, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&projectUserResponse); e != nil {
+				return nil, e
+			}
+			projectUsers = append(projectUsers, projectUserResponse.Data...)
+			if !projectUserResponse.HasMore {
+				break
+			}
+			after = projectUserResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, projectUser := range projectUsers.Data {
+	for _, projectUser := range projectUsers {
 		wg.Add(1)
-		go func(projectUser openai.ProjectUser) {
+		go func(projectUser model.ProjectUser) {
 			defer wg.Done()
-			//addedAt := unixToTimestamp(projectUser.AddedAt)
 			value := models.Resource{
-				ID:   projectUser.Id,
+				ID:   projectUser.ID,
 				Name: projectUser.Name,
 				Description: JSONAllFieldsMarshaller{
 					Value: model.ProjectUserDescription{
-						UserID:    projectUser.Id,
+						UserID:    projectUser.ID,
 						ProjectID: projectID,
 						//Object:  projectUser.Object,
-						//ID:      projectUser.Id,
 						//Name:    projectUser.Name,
 						//Email:   projectUser.Email,
 						//Role:    projectUser.Role,
@@ -96,18 +96,3 @@ func processProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, project
 		}(projectUser)
 	}
 }
-
-//func processProjectUser(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.ProjectUser, error) {
-//	var projectUser *openai.ProjectUser
-//	var resp *http.Response
-//	requestFunc := func() (*http.Response, error) {
-//		var e error
-//		projectUser, resp, e = handler.Client.ProjectsAPI.RetrieveProjectUser(ctx, handler.ProjectID, resourceID).Execute()
-//		return resp, e
-//	}
-//	err := handler.DoRequest(ctx, requestFunc)
-//	if err != nil {
-//		return nil, err
-//	}
-//	return projectUser, nil
-//}

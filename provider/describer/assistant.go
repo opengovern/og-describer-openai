@@ -2,10 +2,12 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
@@ -35,115 +37,70 @@ func GetAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID str
 	if err != nil {
 		return nil, err
 	}
-	//createdAt := unixToTimestamp(assistant.CreatedAt)
 	var name string
-	if assistant.Name.IsSet() {
-		name = *assistant.Name.Get()
-	}
-	var description string
-	if assistant.Description.IsSet() {
-		description = *assistant.Description.Get()
-	}
-	var instructions string
-	if assistant.Instructions.IsSet() {
-		instructions = *assistant.Instructions.Get()
-	}
-	var toolResources openai.AssistantObjectToolResources
-	if assistant.ToolResources.IsSet() {
-		toolResources = *assistant.ToolResources.Get()
-	}
-	var temperature float32
-	if assistant.Temperature.IsSet() {
-		temperature = *assistant.Temperature.Get()
-	}
-	var topP float32
-	if assistant.TopP.IsSet() {
-		topP = *assistant.TopP.Get()
+	if assistant.Name != nil {
+		name = *assistant.Name
 	}
 	value := models.Resource{
-		ID:   assistant.Id,
+		ID:   assistant.ID,
 		Name: name,
 		Description: JSONAllFieldsMarshaller{
-			Value: model.AssistantDescription{
-				ID: assistant.Id,
-				//Object:         assistant.Object,
-				//CreatedAt:      createdAt,
-				Name:           name,
-				Description:    description,
-				Model:          assistant.Model,
-				Instructions:   instructions,
-				Tools:          assistant.Tools,
-				ToolResources:  toolResources,
-				Metadata:       assistant.Metadata,
-				Temperature:    temperature,
-				TopP:           topP,
-				ResponseFormat: assistant.ResponseFormat,
-			},
+			Value: assistant,
 		},
 	}
 	return &value, nil
 }
 
 func processAssistants(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var assistants *openai.ListAssistantsResponse
+	var assistants []model.AssistantDescription
+	var assistantResponse *model.AssistantResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/assistants"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		assistants, resp, e = handler.Client.AssistantsAPI.ListAssistants(ctx).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			params.Set("order", order)
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			req.Header.Set("OpenAI-Beta", "assistants=v2")
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&assistantResponse); e != nil {
+				return nil, e
+			}
+			assistants = append(assistants, assistantResponse.Data...)
+			if !assistantResponse.HasMore {
+				break
+			}
+			after = assistantResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, assistant := range assistants.Data {
+	for _, assistant := range assistants {
 		wg.Add(1)
-		go func(assistant openai.AssistantObject) {
+		go func(assistant model.AssistantDescription) {
 			defer wg.Done()
-			//createdAt := unixToTimestamp(assistant.CreatedAt)
 			var name string
-			if assistant.Name.IsSet() {
-				name = *assistant.Name.Get()
-			}
-			var description string
-			if assistant.Description.IsSet() {
-				description = *assistant.Description.Get()
-			}
-			var instructions string
-			if assistant.Instructions.IsSet() {
-				instructions = *assistant.Instructions.Get()
-			}
-			var toolResources openai.AssistantObjectToolResources
-			if assistant.ToolResources.IsSet() {
-				toolResources = *assistant.ToolResources.Get()
-			}
-			var temperature float32
-			if assistant.Temperature.IsSet() {
-				temperature = *assistant.Temperature.Get()
-			}
-			var topP float32
-			if assistant.TopP.IsSet() {
-				topP = *assistant.TopP.Get()
+			if assistant.Name != nil {
+				name = *assistant.Name
 			}
 			value := models.Resource{
-				ID:   assistant.Id,
+				ID:   assistant.ID,
 				Name: name,
 				Description: JSONAllFieldsMarshaller{
-					Value: model.AssistantDescription{
-						ID: assistant.Id,
-						//Object:         assistant.Object,
-						//CreatedAt:      createdAt,
-						Name:           name,
-						Description:    description,
-						Model:          assistant.Model,
-						Instructions:   instructions,
-						Tools:          assistant.Tools,
-						ToolResources:  toolResources,
-						Metadata:       assistant.Metadata,
-						Temperature:    temperature,
-						TopP:           topP,
-						ResponseFormat: assistant.ResponseFormat,
-					},
+					Value: assistant,
 				},
 			}
 			openaiChan <- value
@@ -151,15 +108,24 @@ func processAssistants(ctx context.Context, handler *OpenAIAPIHandler, openaiCha
 	}
 }
 
-func processAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.AssistantObject, error) {
-	var assistant *openai.AssistantObject
+func processAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*model.AssistantDescription, error) {
+	var assistant *model.AssistantDescription
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/assistants/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		assistant, resp, e = handler.Client.AssistantsAPI.GetAssistant(ctx, resourceID).Execute()
+		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+		req, e = http.NewRequest("GET", finalURL, nil)
+		if e != nil {
+			return nil, e
+		}
+		resp, e = handler.Client.Do(req)
+		if e = json.NewDecoder(resp.Body).Decode(assistant); e != nil {
+			return nil, e
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return nil, err
 	}

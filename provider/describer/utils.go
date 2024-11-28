@@ -2,50 +2,83 @@ package describer
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"fmt"
+	"github.com/opengovern/og-describer-openai/provider/model"
 	"golang.org/x/time/rate"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
 
+const (
+	order = "desc"
+)
+
 type OpenAIAPIHandler struct {
-	Client *openai.APIClient
-	//ProjectID    string
-	RateLimiter  *rate.Limiter
-	Semaphore    chan struct{}
-	MaxRetries   int
-	RetryBackoff time.Duration
+	Client         *http.Client
+	APIKey         string
+	OrganizationID string
+	RateLimiter    *rate.Limiter
+	Semaphore      chan struct{}
+	MaxRetries     int
+	RetryBackoff   time.Duration
 }
 
-func NewOpenAIAPIHandler(client *openai.APIClient, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
+func NewOpenAIAPIHandler(apiKey string, orgID string, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
 	return &OpenAIAPIHandler{
-		Client:       client,
-		RateLimiter:  rate.NewLimiter(rateLimit, burst),
-		Semaphore:    make(chan struct{}, maxConcurrency),
-		MaxRetries:   maxRetries,
-		RetryBackoff: retryBackoff,
+		Client:         http.DefaultClient,
+		APIKey:         apiKey,
+		OrganizationID: orgID,
+		RateLimiter:    rate.NewLimiter(rateLimit, burst),
+		Semaphore:      make(chan struct{}, maxConcurrency),
+		MaxRetries:     maxRetries,
+		RetryBackoff:   retryBackoff,
 	}
 }
 
-func getProjects(ctx context.Context, handler *OpenAIAPIHandler) ([]openai.Project, error) {
-	var projects *openai.ProjectListResponse
+func getProjects(ctx context.Context, handler *OpenAIAPIHandler) ([]model.ProjectDescription, error) {
+	var projects []model.ProjectDescription
+	var projectResponse model.ProjectResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/organization/projects"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		projects, resp, e = handler.Client.ProjectsAPI.ListProjects(ctx).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&projectResponse); e != nil {
+				return nil, e
+			}
+			projects = append(projects, projectResponse.Data...)
+			if !projectResponse.HasMore {
+				break
+			}
+			after = projectResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return nil, err
 	}
-	return projects.Data, nil
+	return projects, nil
 }
 
 // DoRequest executes the openai API request with rate limiting, retries, and concurrency control.
-func (h *OpenAIAPIHandler) DoRequest(ctx context.Context, requestFunc func() (*http.Response, error)) error {
+func (h *OpenAIAPIHandler) DoRequest(ctx context.Context, req *http.Request, requestFunc func(req *http.Request) (*http.Response, error)) error {
 	h.Semaphore <- struct{}{}
 	defer func() { <-h.Semaphore }()
 	var resp *http.Response
@@ -55,33 +88,38 @@ func (h *OpenAIAPIHandler) DoRequest(ctx context.Context, requestFunc func() (*h
 		if err = h.RateLimiter.Wait(ctx); err != nil {
 			return err
 		}
+		// Set request headers
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", h.APIKey))
+		req.Header.Set("OpenAI-Organization", h.OrganizationID)
 		// Execute the request function
-		resp, err = requestFunc()
+		resp, err = requestFunc(req)
 		if err == nil {
 			return nil
 		}
 		// Handle rate limit errors
 		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
-			// Set rate limiter value according to rate limit requests header
-			var limitRequests int
-			limitRequestsStr := resp.Header.Get("x-ratelimit-limit-requests")
-			if limitRequestsStr != "" {
-				limitRequests, err = strconv.Atoi(limitRequestsStr)
-				if err == nil {
-					h.RateLimiter = rate.NewLimiter(rate.Every(time.Minute/time.Duration(limitRequests)), 1)
-				}
-			}
 			// Wait until reset time
 			resetTime := resp.Header.Get("x-ratelimit-reset-requests")
+			var resetDuration time.Duration
 			if resetTime != "" {
 				resetUnix, parseErr := strconv.ParseInt(resetTime, 10, 64)
 				if parseErr == nil {
-					sleepDuration := time.Until(time.Unix(resetUnix, 0))
-					if sleepDuration > 0 {
-						time.Sleep(sleepDuration)
-						continue
-					}
+					resetDuration = time.Until(time.Unix(resetUnix, 0))
 				}
+			}
+			// Set rate limiter value according to rate limit requests header
+			var remainRequests int
+			remainRequestsStr := resp.Header.Get("x-ratelimit-remaining-requests")
+			if remainRequestsStr != "" {
+				remainRequests, err = strconv.Atoi(remainRequestsStr)
+				if err == nil {
+					h.RateLimiter = rate.NewLimiter(rate.Every(resetDuration/time.Duration(remainRequests)), 1)
+				}
+			}
+			if resetDuration > 0 {
+				time.Sleep(resetDuration)
+				continue
 			}
 			// Exponential backoff if headers are missing
 			backoff := h.RetryBackoff * (1 << attempt)

@@ -2,7 +2,8 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
@@ -35,49 +36,45 @@ func GetModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string)
 	if err != nil {
 		return nil, err
 	}
-	createdAt := unixToTimestamp(modelData.Created)
 	value := models.Resource{
-		ID:   modelData.Id,
-		Name: modelData.Id,
+		ID:   modelData.ID,
+		Name: modelData.ID,
 		Description: JSONAllFieldsMarshaller{
-			Value: model.ModelsDescription{
-				ID:        modelData.Id,
-				CreatedAt: createdAt,
-				Object:    modelData.Object,
-				OwnedBy:   modelData.OwnedBy,
-			},
+			Value: modelData,
 		},
 	}
 	return &value, nil
 }
 
 func processModels(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var modelsData *openai.ListModelsResponse
+	var modelResponse model.ModelsResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/models"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		modelsData, resp, e = handler.Client.ModelsAPI.ListModels(ctx).Execute()
+		req, e = http.NewRequest("GET", baseURL, nil)
+		if e != nil {
+			return nil, e
+		}
+		resp, e = handler.Client.Do(req)
+		if e = json.NewDecoder(resp.Body).Decode(&modelResponse); e != nil {
+			return nil, e
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, modelData := range modelsData.Data {
+	for _, modelData := range modelResponse.Data {
 		wg.Add(1)
-		go func(modelData openai.Model) {
+		go func(modelData model.ModelsDescription) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(modelData.Created)
 			value := models.Resource{
-				ID:   modelData.Id,
-				Name: modelData.Id,
+				ID:   modelData.ID,
+				Name: modelData.ID,
 				Description: JSONAllFieldsMarshaller{
-					Value: model.ModelsDescription{
-						ID:        modelData.Id,
-						CreatedAt: createdAt,
-						Object:    modelData.Object,
-						OwnedBy:   modelData.OwnedBy,
-					},
+					Value: modelData,
 				},
 			}
 			openaiChan <- value
@@ -85,15 +82,24 @@ func processModels(ctx context.Context, handler *OpenAIAPIHandler, openaiChan ch
 	}
 }
 
-func processModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.Model, error) {
-	var modelData *openai.Model
+func processModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*model.ModelsDescription, error) {
+	var modelData *model.ModelsDescription
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/models/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		modelData, resp, e = handler.Client.ModelsAPI.RetrieveModel(ctx, resourceID).Execute()
+		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+		req, e = http.NewRequest("GET", finalURL, nil)
+		if e != nil {
+			return nil, e
+		}
+		resp, e = handler.Client.Do(req)
+		if e = json.NewDecoder(resp.Body).Decode(modelData); e != nil {
+			return nil, e
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return nil, err
 	}

@@ -2,10 +2,12 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
@@ -30,76 +32,53 @@ func ListFiles(ctx context.Context, handler *OpenAIAPIHandler, stream *models.St
 	return values, nil
 }
 
-func GetFile(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*models.Resource, error) {
-	file, err := processFile(ctx, handler, resourceID)
-	if err != nil {
-		return nil, err
-	}
-	createdAt := unixToTimestamp(file.CreatedAt)
-	value := models.Resource{
-		ID:   file.Id,
-		Name: file.Filename,
-		Description: JSONAllFieldsMarshaller{
-			Value: model.FileDescription{
-				ID:        file.Id,
-				FileName:  file.Filename,
-				CreatedAt: createdAt,
-				Bytes:     file.Bytes,
-				Object:    file.Object,
-				Purpose:   file.Purpose,
-			},
-		},
-	}
-	return &value, nil
-}
-
 func processFiles(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var files *openai.ListFilesResponse
+	var files []model.FileDescription
+	var fileResponse *model.FileResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/files"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		files, resp, e = handler.Client.FilesAPI.ListFiles(ctx).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "10000")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&fileResponse); e != nil {
+				return nil, e
+			}
+			files = append(files, fileResponse.Data...)
+			if !fileResponse.HasMore {
+				break
+			}
+			after = fileResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, file := range files.Data {
+	for _, file := range files {
 		wg.Add(1)
-		go func(file openai.OpenAIFile) {
+		go func(file model.FileDescription) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(file.CreatedAt)
 			value := models.Resource{
-				ID:   file.Id,
-				Name: file.Filename,
+				ID:   file.ID,
+				Name: file.FileName,
 				Description: JSONAllFieldsMarshaller{
-					Value: model.FileDescription{
-						ID:        file.Id,
-						FileName:  file.Filename,
-						CreatedAt: createdAt,
-						Bytes:     file.Bytes,
-						Object:    file.Object,
-						Purpose:   file.Purpose,
-					},
+					Value: file,
 				},
 			}
 			openaiChan <- value
 		}(file)
 	}
-}
-
-func processFile(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.OpenAIFile, error) {
-	var file *openai.OpenAIFile
-	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
-		var e error
-		file, resp, e = handler.Client.FilesAPI.RetrieveFile(ctx, resourceID).Execute()
-		return resp, e
-	}
-	err := handler.DoRequest(ctx, requestFunc)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
 }

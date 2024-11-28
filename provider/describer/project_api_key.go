@@ -2,18 +2,26 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
 func ListProjectAPIKeys(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
 	var wg sync.WaitGroup
 	openaiChan := make(chan models.Resource)
+	projects, err := getProjects(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
 	go func() {
-		processProjectAPIKeys(ctx, handler, openaiChan, &wg)
+		for _, project := range projects {
+			processProjectAPIKeys(ctx, handler, project.ID, openaiChan, &wg)
+		}
 		wg.Wait()
 		close(openaiChan)
 	}()
@@ -30,76 +38,56 @@ func ListProjectAPIKeys(ctx context.Context, handler *OpenAIAPIHandler, stream *
 	return values, nil
 }
 
-func GetProjectAPIKey(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*models.Resource, error) {
-	projectAPIKey, err := processProjectAPIKey(ctx, handler, resourceID)
-	if err != nil {
-		return nil, err
-	}
-	createdAt := unixToTimestamp(projectAPIKey.CreatedAt)
-	value := models.Resource{
-		ID:   projectAPIKey.Id,
-		Name: projectAPIKey.Name,
-		Description: JSONAllFieldsMarshaller{
-			Value: model.ProjectApiKeyDescription{
-				Object:        projectAPIKey.Object,
-				ID:            projectAPIKey.Id,
-				Name:          projectAPIKey.Name,
-				RedactedValue: projectAPIKey.RedactedValue,
-				CreatedAt:     createdAt,
-				Owner:         projectAPIKey.Owner,
-			},
-		},
-	}
-	return &value, nil
-}
-
-func processProjectAPIKeys(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var projectAPIKeys *openai.ProjectApiKeyListResponse
+func processProjectAPIKeys(ctx context.Context, handler *OpenAIAPIHandler, projectID string, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+	var projectAPIKeys []model.ProjectApiKey
+	var projectAPIKeyResponse model.ProjectApiKeyResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/organization/projects/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		projectAPIKeys, resp, e = handler.Client.ProjectsAPI.ListProjectApiKeys(ctx, handler.ProjectID).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s%s/api_keys?%s", baseURL, projectID, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&projectAPIKeyResponse); e != nil {
+				return nil, e
+			}
+			projectAPIKeys = append(projectAPIKeys, projectAPIKeyResponse.Data...)
+			if !projectAPIKeyResponse.HasMore {
+				break
+			}
+			after = projectAPIKeyResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, projectAPIKey := range projectAPIKeys.Data {
+	for _, projectAPIKey := range projectAPIKeys {
 		wg.Add(1)
-		go func(projectAPIKey openai.ProjectApiKey) {
+		go func(projectAPIKey model.ProjectApiKey) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(projectAPIKey.CreatedAt)
 			value := models.Resource{
-				ID:   projectAPIKey.Id,
+				ID:   projectAPIKey.ID,
 				Name: projectAPIKey.Name,
 				Description: JSONAllFieldsMarshaller{
 					Value: model.ProjectApiKeyDescription{
-						Object:        projectAPIKey.Object,
-						ID:            projectAPIKey.Id,
-						Name:          projectAPIKey.Name,
-						RedactedValue: projectAPIKey.RedactedValue,
-						CreatedAt:     createdAt,
-						Owner:         projectAPIKey.Owner,
+						ProjectApiKey: projectAPIKey,
+						ProjectID:     projectID,
 					},
 				},
 			}
 			openaiChan <- value
 		}(projectAPIKey)
 	}
-}
-
-func processProjectAPIKey(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.ProjectApiKey, error) {
-	var projectAPIKey *openai.ProjectApiKey
-	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
-		var e error
-		projectAPIKey, resp, e = handler.Client.ProjectsAPI.RetrieveProjectApiKey(ctx, handler.ProjectID, resourceID).Execute()
-		return resp, e
-	}
-	err := handler.DoRequest(ctx, requestFunc)
-	if err != nil {
-		return nil, err
-	}
-	return projectAPIKey, nil
 }

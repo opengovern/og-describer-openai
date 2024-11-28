@@ -12,7 +12,7 @@ require (
 	github.com/nats-io/nats.go v1.36.0
 	github.com/opengovern/og-util v1.1.5
 	github.com/spf13/cobra v1.7.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.8.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/net v0.27.0
@@ -146,6 +146,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+	github.com/opengovern/og-describer-openai/openai-go-client v0.0.0-20241127171858-d3785a5dbdb2 // indirect
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0 // indirect
 	github.com/pganalyze/pg_query_go/v4 v4.2.3 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect

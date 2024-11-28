@@ -2,18 +2,26 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
 func ListProjectRateLimits(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
 	var wg sync.WaitGroup
 	openaiChan := make(chan models.Resource)
+	projects, err := getProjects(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
 	go func() {
-		processProjectRateLimits(ctx, handler, openaiChan, &wg)
+		for _, project := range projects {
+			processProjectRateLimits(ctx, handler, project.ID, openaiChan, &wg)
+		}
 		wg.Wait()
 		close(openaiChan)
 	}()
@@ -30,36 +38,52 @@ func ListProjectRateLimits(ctx context.Context, handler *OpenAIAPIHandler, strea
 	return values, nil
 }
 
-func processProjectRateLimits(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var projectRateLimits *openai.ProjectRateLimitListResponse
+func processProjectRateLimits(ctx context.Context, handler *OpenAIAPIHandler, projectID string, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+	var projectRateLimits []model.ProjectRateLimit
+	var projectRateLimitResponse model.ProjectRateLimitResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/organization/projects/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		projectRateLimits, resp, e = handler.Client.ProjectsAPI.ListProjectRateLimits(ctx, handler.ProjectID).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s%s/rate_limits?%s", baseURL, projectID, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&projectRateLimitResponse); e != nil {
+				return nil, e
+			}
+			projectRateLimits = append(projectRateLimits, projectRateLimitResponse.Data...)
+			if !projectRateLimitResponse.HasMore {
+				break
+			}
+			after = projectRateLimitResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, projectRateLimit := range projectRateLimits.Data {
+	for _, projectRateLimit := range projectRateLimits {
 		wg.Add(1)
-		go func(projectRateLimit openai.ProjectRateLimit) {
+		go func(projectRateLimit model.ProjectRateLimit) {
 			defer wg.Done()
 			value := models.Resource{
-				ID:   projectRateLimit.Id,
+				ID:   projectRateLimit.ID,
 				Name: projectRateLimit.Model,
 				Description: JSONAllFieldsMarshaller{
 					Value: model.ProjectRateLimitDescription{
-						Object:                      projectRateLimit.Object,
-						ID:                          projectRateLimit.Id,
-						Model:                       projectRateLimit.Model,
-						MaxRequestsPer1Minute:       projectRateLimit.MaxRequestsPer1Minute,
-						MaxTokensPer1Minute:         projectRateLimit.MaxTokensPer1Minute,
-						MaxImagesPer1Minute:         projectRateLimit.MaxImagesPer1Minute,
-						MaxAudioMegabytesPer1Minute: projectRateLimit.MaxAudioMegabytesPer1Minute,
-						MaxRequestsPer1Day:          projectRateLimit.MaxRequestsPer1Day,
-						Batch1DayMaxInputTokens:     projectRateLimit.Batch1DayMaxInputTokens,
+						ProjectRateLimit: projectRateLimit,
+						ProjectID:        projectID,
 					},
 				},
 			}

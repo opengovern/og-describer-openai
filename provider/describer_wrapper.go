@@ -23,11 +23,10 @@ func DescribeListByOpenAI(describe func(context.Context, *describer.OpenAIAPIHan
 		if apiKey == "" {
 			return nil, errors.New("api_key must be configured")
 		}
-		//organizationID := cfg.OrganizationID
-		//if organizationID == "" {
-		//	return nil, errors.New("organization ID must be configured")
-		//}
-		//projectID := cfg.ProjectID
+		organizationID := cfg.OrganizationID
+		if organizationID == "" {
+			return nil, errors.New("organization ID must be configured")
+		}
 		// Create openai configs
 		config := openai.NewConfiguration()
 		config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey))

@@ -2,12 +2,13 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
-	"time"
 )
 
 func ListVectorStores(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
@@ -36,83 +37,60 @@ func GetVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID s
 	if err != nil {
 		return nil, err
 	}
-	createdAt := unixToTimestamp(vectorStore.CreatedAt)
-	var expiresAt time.Time
-	if vectorStore.ExpiresAt.IsSet() {
-		expires := *vectorStore.ExpiresAt.Get()
-		expiresAt = unixToTimestamp(expires)
-	}
-	var lastActiveAt time.Time
-	if vectorStore.LastActiveAt.IsSet() {
-		lastActive := *vectorStore.LastActiveAt.Get()
-		lastActiveAt = unixToTimestamp(lastActive)
-	}
 	value := models.Resource{
-		ID:   vectorStore.Id,
+		ID:   vectorStore.ID,
 		Name: vectorStore.Name,
 		Description: JSONAllFieldsMarshaller{
-			Value: model.VectorStoreDescription{
-				Id:           vectorStore.Id,
-				Object:       vectorStore.Object,
-				CreatedAt:    createdAt,
-				Name:         vectorStore.Name,
-				UsageBytes:   vectorStore.UsageBytes,
-				FileCounts:   vectorStore.FileCounts,
-				Status:       vectorStore.Status,
-				ExpiresAfter: vectorStore.ExpiresAfter,
-				ExpiresAt:    expiresAt,
-				LastActiveAt: lastActiveAt,
-				Metadata:     vectorStore.Metadata,
-			},
+			Value: vectorStore,
 		},
 	}
 	return &value, nil
 }
 
 func processVectorStores(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var vectorStores *openai.ListVectorStoresResponse
+	var vectorStores []model.VectorStoreDescription
+	var vectorStoreResponse model.VectorStoreResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/vector_stores"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		vectorStores, resp, e = handler.Client.VectorStoresAPI.ListVectorStores(ctx).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&vectorStoreResponse); e != nil {
+				return nil, e
+			}
+			vectorStores = append(vectorStores, vectorStoreResponse.Data...)
+			if !vectorStoreResponse.HasMore {
+				break
+			}
+			after = vectorStoreResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, vectorStore := range vectorStores.Data {
+	for _, vectorStore := range vectorStores {
 		wg.Add(1)
-		go func(vectorStore openai.VectorStoreObject) {
+		go func(vectorStore model.VectorStoreDescription) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(vectorStore.CreatedAt)
-			var expiresAt time.Time
-			if vectorStore.ExpiresAt.IsSet() {
-				expires := *vectorStore.ExpiresAt.Get()
-				expiresAt = unixToTimestamp(expires)
-			}
-			var lastActiveAt time.Time
-			if vectorStore.LastActiveAt.IsSet() {
-				lastActive := *vectorStore.LastActiveAt.Get()
-				lastActiveAt = unixToTimestamp(lastActive)
-			}
 			value := models.Resource{
-				ID:   vectorStore.Id,
+				ID:   vectorStore.ID,
 				Name: vectorStore.Name,
 				Description: JSONAllFieldsMarshaller{
-					Value: model.VectorStoreDescription{
-						Id:           vectorStore.Id,
-						Object:       vectorStore.Object,
-						CreatedAt:    createdAt,
-						Name:         vectorStore.Name,
-						UsageBytes:   vectorStore.UsageBytes,
-						FileCounts:   vectorStore.FileCounts,
-						Status:       vectorStore.Status,
-						ExpiresAfter: vectorStore.ExpiresAfter,
-						ExpiresAt:    expiresAt,
-						LastActiveAt: lastActiveAt,
-						Metadata:     vectorStore.Metadata,
-					},
+					Value: vectorStore,
 				},
 			}
 			openaiChan <- value
@@ -120,15 +98,24 @@ func processVectorStores(ctx context.Context, handler *OpenAIAPIHandler, openaiC
 	}
 }
 
-func processVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.VectorStoreObject, error) {
-	var vectorStore *openai.VectorStoreObject
+func processVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*model.VectorStoreDescription, error) {
+	var vectorStore *model.VectorStoreDescription
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/vector_stores/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		vectorStore, resp, e = handler.Client.VectorStoresAPI.GetVectorStore(ctx, resourceID).Execute()
+		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+		req, e = http.NewRequest("GET", finalURL, nil)
+		if e != nil {
+			return nil, e
+		}
+		resp, e = handler.Client.Do(req)
+		if e = json.NewDecoder(resp.Body).Decode(vectorStore); e != nil {
+			return nil, e
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return nil, err
 	}

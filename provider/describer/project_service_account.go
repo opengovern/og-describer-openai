@@ -2,18 +2,26 @@ package describer
 
 import (
 	"context"
-	openai "github.com/opengovern/og-describer-openai/openai-go-client"
+	"encoding/json"
+	"fmt"
 	"github.com/opengovern/og-describer-openai/pkg/sdk/models"
 	"github.com/opengovern/og-describer-openai/provider/model"
 	"net/http"
+	"net/url"
 	"sync"
 )
 
 func ListProjectServiceAccounts(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
 	var wg sync.WaitGroup
 	openaiChan := make(chan models.Resource)
+	projects, err := getProjects(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
 	go func() {
-		processProjectServiceAccounts(ctx, handler, openaiChan, &wg)
+		for _, project := range projects {
+			processProjectServiceAccounts(ctx, handler, project.ID, openaiChan, &wg)
+		}
 		wg.Wait()
 		close(openaiChan)
 	}()
@@ -30,74 +38,56 @@ func ListProjectServiceAccounts(ctx context.Context, handler *OpenAIAPIHandler, 
 	return values, nil
 }
 
-func GetProjectServiceAccount(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*models.Resource, error) {
-	projectServiceAccount, err := processProjectServiceAccount(ctx, handler, resourceID)
-	if err != nil {
-		return nil, err
-	}
-	createdAt := unixToTimestamp(projectServiceAccount.CreatedAt)
-	value := models.Resource{
-		ID:   projectServiceAccount.Id,
-		Name: projectServiceAccount.Name,
-		Description: JSONAllFieldsMarshaller{
-			Value: model.ProjectServiceAccountDescription{
-				Object:    projectServiceAccount.Object,
-				ID:        projectServiceAccount.Id,
-				Name:      projectServiceAccount.Name,
-				Role:      projectServiceAccount.Role,
-				CreatedAt: createdAt,
-			},
-		},
-	}
-	return &value, nil
-}
-
-func processProjectServiceAccounts(ctx context.Context, handler *OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
-	var projectServiceAccounts *openai.ProjectServiceAccountListResponse
+func processProjectServiceAccounts(ctx context.Context, handler *OpenAIAPIHandler, projectID string, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+	var projectServiceAccounts []model.ProjectServiceAccount
+	var projectServiceAccountResponse model.ProjectServiceAccountResponse
 	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
+	baseURL := "https://api.openai.com/v1/organization/projects/"
+	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		projectServiceAccounts, resp, e = handler.Client.ProjectsAPI.ListProjectServiceAccounts(ctx, handler.ProjectID).Execute()
+		var after string
+		for {
+			params := url.Values{}
+			params.Set("limit", "100")
+			if after != "" {
+				params.Set("after", after)
+			}
+			finalURL := fmt.Sprintf("%s%s/service_accounts?%s", baseURL, projectID, params.Encode())
+			req, e = http.NewRequest("GET", finalURL, nil)
+			if e != nil {
+				return nil, e
+			}
+			resp, e = handler.Client.Do(req)
+			if e = json.NewDecoder(resp.Body).Decode(&projectServiceAccountResponse); e != nil {
+				return nil, e
+			}
+			projectServiceAccounts = append(projectServiceAccounts, projectServiceAccountResponse.Data...)
+			if !projectServiceAccountResponse.HasMore {
+				break
+			}
+			after = projectServiceAccountResponse.LastID
+		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, requestFunc)
+	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
 	if err != nil {
 		return
 	}
-	for _, projectServiceAccount := range projectServiceAccounts.Data {
+	for _, projectServiceAccount := range projectServiceAccounts {
 		wg.Add(1)
-		go func(projectServiceAccount openai.ProjectServiceAccount) {
+		go func(projectServiceAccount model.ProjectServiceAccount) {
 			defer wg.Done()
-			createdAt := unixToTimestamp(projectServiceAccount.CreatedAt)
 			value := models.Resource{
-				ID:   projectServiceAccount.Id,
+				ID:   projectServiceAccount.ID,
 				Name: projectServiceAccount.Name,
 				Description: JSONAllFieldsMarshaller{
 					Value: model.ProjectServiceAccountDescription{
-						Object:    projectServiceAccount.Object,
-						ID:        projectServiceAccount.Id,
-						Name:      projectServiceAccount.Name,
-						Role:      projectServiceAccount.Role,
-						CreatedAt: createdAt,
+						ProjectServiceAccount: projectServiceAccount,
+						ProjectID:             projectID,
 					},
 				},
 			}
 			openaiChan <- value
 		}(projectServiceAccount)
 	}
-}
-
-func processProjectServiceAccount(ctx context.Context, handler *OpenAIAPIHandler, resourceID string) (*openai.ProjectServiceAccount, error) {
-	var projectServiceAccount *openai.ProjectServiceAccount
-	var resp *http.Response
-	requestFunc := func() (*http.Response, error) {
-		var e error
-		projectServiceAccount, resp, e = handler.Client.ProjectsAPI.RetrieveProjectServiceAccount(ctx, handler.ProjectID, resourceID).Execute()
-		return resp, e
-	}
-	err := handler.DoRequest(ctx, requestFunc)
-	if err != nil {
-		return nil, err
-	}
-	return projectServiceAccount, nil
 }
