@@ -1,9 +1,110 @@
 [
   {
-    "ResourceName": "AWS::Redshift::Snapshot",
-    "ListDescriber": "ParallelDescribeRegional(describer.RedshiftSnapshot)",
-    "GetDescriber": "ParallelDescribeRegionalSingleResource(describer.GetRedshiftSnapshot)",
-    "SteampipeTable": "aws_redshift_snapshot",
-    "Model": "RedshiftSnapshot"
+    "ResourceName": "OpenAI/Assistant",
+    "Tags": {
+      "category": [
+        "Assistant"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListAssistants)",
+    "GetDescriber": "DescribeSingleByOpenAI(describer.GetAssistant)",
+    "SteampipeTable": "openai_assistant",
+    "Model": "Assistant"
+  },
+  {
+    "ResourceName": "OpenAI/File",
+    "Tags": {
+      "category": [
+        "File"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListFiles)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_file",
+    "Model": "File"
+  },
+  {
+    "ResourceName": "OpenAI/Models",
+    "Tags": {
+      "category": [
+        "Model"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListModels)",
+    "GetDescriber": "DescribeSingleByOpenAI(describer.GetModel)",
+    "SteampipeTable": "openai_model",
+    "Model": "Models"
+  },
+  {
+    "ResourceName": "OpenAI/Project",
+    "Tags": {
+      "category": [
+        "Project"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListProjects)",
+    "GetDescriber": "DescribeSingleByOpenAI(describer.GetProject)",
+    "SteampipeTable": "openai_project",
+    "Model": "Project"
+  },
+  {
+    "ResourceName": "OpenAI/Project/APIKey",
+    "Tags": {
+      "category": [
+        "Project"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectAPIKeys)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_project_api_key",
+    "Model": "ProjectApiKey"
+  },
+  {
+    "ResourceName": "OpenAI/Project/RateLimit",
+    "Tags": {
+      "category": [
+        "Project"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectRateLimits)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_project_rate_limit",
+    "Model": "ProjectRateLimit"
+  },
+  {
+    "ResourceName": "OpenAI/Project/ServiceAccount",
+    "Tags": {
+      "category": [
+        "Project"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectServiceAccounts)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_project_service_account",
+    "Model": "ProjectServiceAccount"
+  },
+  {
+    "ResourceName": "OpenAI/Project/User",
+    "Tags": {
+      "category": [
+        "Project"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectUsers)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_project_user",
+    "Model": "ProjectUser"
+  },
+  {
+    "ResourceName": "OpenAI/VectorStore",
+    "Tags": {
+      "category": [
+        "VectorStore"
+      ]
+    },
+    "ListDescriber": "DescribeListByOpenAI(describer.ListVectorStores)",
+    "GetDescriber": "",
+    "SteampipeTable": "openai_vector_store",
+    "Model": "VectorStore"
   }
 ]

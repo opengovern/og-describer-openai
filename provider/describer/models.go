@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func ListModel(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
+func ListModels(ctx context.Context, handler *OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
 	var wg sync.WaitGroup
 	openaiChan := make(chan models.Resource)
 	go func() {
