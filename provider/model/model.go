@@ -142,7 +142,7 @@ type AssistantDescription struct {
 	Metadata       map[string]interface{}        `json:"metadata"`
 	Temperature    *float32                      `json:"temperature"`
 	TopP           *float32                      `json:"top_p"`
-	ResponseFormat *string                       `json:"response_format"`
+	ResponseFormat *interface{}                  `json:"response_format"`
 }
 
 type VectorStoreObjectFileCounts struct {
