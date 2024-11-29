@@ -69,7 +69,7 @@ func tableOpenAiAssistant(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:      "response_format",
-				Type:      proto.ColumnType_JSON,
+				Type:      proto.ColumnType_UNKNOWN,
 				Transform: transform.FromField("Description.ResponseFormat"),
 			},
 		}),
