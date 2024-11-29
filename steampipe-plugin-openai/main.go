@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/turbot/steampipe-plugin-openai/openai"
+	"github.com/opengovern/og-describer-openai/steampipe-plugin-openai/openai"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
