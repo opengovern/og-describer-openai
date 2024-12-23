@@ -25,7 +25,7 @@ func tableOpenAiModel(ctx context.Context) *plugin.Table {
 				Description: "ID of the model, e.g. davinci."},
 			{
 				Name:        "created_at",
-				Type:        proto.ColumnType_TIMESTAMP,
+				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromField("Description.CreatedAt").Transform(transform.UnixToTimestamp),
 				Description: "Timestamp of when the model was created."},
 			{

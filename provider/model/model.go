@@ -45,7 +45,7 @@ type ModelsDescription struct {
 	OwnedBy    string       `json:"owned_by"`
 	Permission []Permission `json:"permission"`
 	Root       string       `json:"root"`
-	Parent     string       `json:"parent"`
+	//Parent     string       `json:"parent"`
 }
 
 type AssistantObjectToolsInner struct {
@@ -132,17 +132,17 @@ type AssistantResponse struct {
 type AssistantDescription struct {
 	//Object         string
 	//CreatedAt      time.Time
-	ID             string                 `json:"id"`
-	Name           *string                `json:"name"`
-	Description    *string                `json:"description"`
-	Model          string                 `json:"model"`
-	Instructions   *string                `json:"instructions"`
-	Tools          []interface{}          `json:"tools"`
-	ToolResources  *interface{}           `json:"tool_resources"`
-	Metadata       map[string]interface{} `json:"metadata"`
-	Temperature    *float32               `json:"temperature"`
-	TopP           *float32               `json:"top_p"`
-	ResponseFormat *interface{}           `json:"response_format"`
+	ID            string                 `json:"id"`
+	Name          *string                `json:"name"`
+	Description   *string                `json:"description"`
+	Model         string                 `json:"model"`
+	Instructions  *string                `json:"instructions"`
+	Tools         []interface{}          `json:"tools"`
+	ToolResources *interface{}           `json:"tool_resources"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	Temperature   *float32               `json:"temperature"`
+	TopP          *float32               `json:"top_p"`
+	//ResponseFormat *interface{}           `json:"response_format"`
 }
 
 type VectorStoreObjectFileCounts struct {

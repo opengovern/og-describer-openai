@@ -34,7 +34,7 @@ func tableOpenAiVectorStore(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:      "created_at",
-				Type:      proto.ColumnType_TIMESTAMP,
+				Type:      proto.ColumnType_INT,
 				Transform: transform.FromField("Description.CreatedAt").Transform(transform.UnixToTimestamp),
 			},
 			{
@@ -59,12 +59,12 @@ func tableOpenAiVectorStore(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:      "expires_at",
-				Type:      proto.ColumnType_STRING,
+				Type:      proto.ColumnType_INT,
 				Transform: transform.FromField("Description.ExpiresAt").NullIfZero().Transform(transform.UnixToTimestamp),
 			},
 			{
 				Name:      "last_active_at",
-				Type:      proto.ColumnType_STRING,
+				Type:      proto.ColumnType_INT,
 				Transform: transform.FromField("Description.LastActiveAt").NullIfZero().Transform(transform.UnixToTimestamp),
 			},
 			{

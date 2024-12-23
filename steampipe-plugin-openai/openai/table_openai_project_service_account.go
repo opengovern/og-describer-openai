@@ -39,7 +39,7 @@ func tableOpenAiProjectServiceAccount(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:      "created_at",
-				Type:      proto.ColumnType_TIMESTAMP,
+				Type:      proto.ColumnType_INT,
 				Transform: transform.FromField("Description.CreatedAt").Transform(transform.UnixToTimestamp),
 			},
 			{

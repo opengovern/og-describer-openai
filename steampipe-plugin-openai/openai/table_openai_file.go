@@ -34,7 +34,7 @@ func tableOpenAiFile(ctx context.Context) *plugin.Table {
 				Description: "Name of the file."},
 			{
 				Name:        "created_at",
-				Type:        proto.ColumnType_TIMESTAMP,
+				Type:        proto.ColumnType_INT,
 				Transform:   transform.FromField("Description.CreatedAt").Transform(transform.UnixToTimestamp),
 				Description: "Timestamp of when the file was created."},
 			{
