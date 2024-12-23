@@ -62,10 +62,6 @@ func getLoginIdCacheKey(ctx context.Context, d *plugin.QueryData, h *plugin.Hydr
 	return key, nil
 }
 
-/*
-
 func getLoginIdUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-/*
+	return nil, nil
 }
-
-*/
