@@ -35,11 +35,9 @@ func GetVectorStore(ctx context.Context, handler *OpenAIAPIHandler, resourceID s
 		return nil, err
 	}
 	value := models.Resource{
-		ID:   vectorStore.ID,
-		Name: vectorStore.Name,
-		Description: JSONAllFieldsMarshaller{
-			Value: vectorStore,
-		},
+		ID:          vectorStore.ID,
+		Name:        vectorStore.Name,
+		Description: vectorStore,
 	}
 	return &value, nil
 }
@@ -86,11 +84,9 @@ func processVectorStores(ctx context.Context, handler *OpenAIAPIHandler) ([]mode
 	var values []models.Resource
 	for _, vectorStore := range vectorStores {
 		value := models.Resource{
-			ID:   vectorStore.ID,
-			Name: vectorStore.Name,
-			Description: JSONAllFieldsMarshaller{
-				Value: vectorStore,
-			},
+			ID:          vectorStore.ID,
+			Name:        vectorStore.Name,
+			Description: vectorStore,
 		}
 		values = append(values, value)
 	}

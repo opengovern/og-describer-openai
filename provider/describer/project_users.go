@@ -80,15 +80,13 @@ func processProjectUsers(ctx context.Context, handler *OpenAIAPIHandler, project
 			value := models.Resource{
 				ID:   projectUser.ID,
 				Name: projectUser.Name,
-				Description: JSONAllFieldsMarshaller{
-					Value: model.ProjectUserDescription{
-						UserID:    projectUser.ID,
-						ProjectID: projectID,
-						Object:    projectUser.Object,
-						Name:      projectUser.Name,
-						Email:     projectUser.Email,
-						Role:      projectUser.Role,
-					},
+				Description: model.ProjectUserDescription{
+					UserID:    projectUser.ID,
+					ProjectID: projectID,
+					Object:    projectUser.Object,
+					Name:      projectUser.Name,
+					Email:     projectUser.Email,
+					Role:      projectUser.Role,
 				},
 			}
 			openaiChan <- value

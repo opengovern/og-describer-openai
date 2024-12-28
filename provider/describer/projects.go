@@ -38,11 +38,9 @@ func GetProject(ctx context.Context, handler *OpenAIAPIHandler, resourceID strin
 		return nil, err
 	}
 	value := models.Resource{
-		ID:   project.ID,
-		Name: project.Name,
-		Description: JSONAllFieldsMarshaller{
-			Value: project,
-		},
+		ID:          project.ID,
+		Name:        project.Name,
+		Description: project,
 	}
 	return &value, nil
 }
@@ -87,11 +85,9 @@ func processProjects(ctx context.Context, handler *OpenAIAPIHandler, openaiChan 
 		go func(project model.ProjectDescription) {
 			defer wg.Done()
 			value := models.Resource{
-				ID:   project.ID,
-				Name: project.Name,
-				Description: JSONAllFieldsMarshaller{
-					Value: project,
-				},
+				ID:          project.ID,
+				Name:        project.Name,
+				Description: project,
 			}
 			openaiChan <- value
 		}(project)

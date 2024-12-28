@@ -39,11 +39,9 @@ func GetAssistant(ctx context.Context, handler *OpenAIAPIHandler, resourceID str
 		name = *assistant.Name
 	}
 	value := models.Resource{
-		ID:   assistant.ID,
-		Name: name,
-		Description: JSONAllFieldsMarshaller{
-			Value: assistant,
-		},
+		ID:          assistant.ID,
+		Name:        name,
+		Description: assistant,
 	}
 	return &value, nil
 }
@@ -95,11 +93,9 @@ func processAssistants(ctx context.Context, handler *OpenAIAPIHandler) ([]models
 			name = *assistant.Name
 		}
 		value := models.Resource{
-			ID:   assistant.ID,
-			Name: name,
-			Description: JSONAllFieldsMarshaller{
-				Value: assistant,
-			},
+			ID:          assistant.ID,
+			Name:        name,
+			Description: assistant,
 		}
 		results = append(results, value)
 	}

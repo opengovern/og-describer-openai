@@ -80,11 +80,9 @@ func processProjectAPIKeys(ctx context.Context, handler *OpenAIAPIHandler, proje
 			value := models.Resource{
 				ID:   projectAPIKey.ID,
 				Name: projectAPIKey.Name,
-				Description: JSONAllFieldsMarshaller{
-					Value: model.ProjectApiKeyDescription{
-						ProjectApiKey: projectAPIKey,
-						ProjectID:     projectID,
-					},
+				Description: model.ProjectApiKeyDescription{
+					ProjectApiKey: projectAPIKey,
+					ProjectID:     projectID,
 				},
 			}
 			openaiChan <- value

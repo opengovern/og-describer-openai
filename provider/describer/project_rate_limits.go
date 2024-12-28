@@ -80,11 +80,9 @@ func processProjectRateLimits(ctx context.Context, handler *OpenAIAPIHandler, pr
 			value := models.Resource{
 				ID:   projectRateLimit.ID,
 				Name: projectRateLimit.Model,
-				Description: JSONAllFieldsMarshaller{
-					Value: model.ProjectRateLimitDescription{
-						ProjectRateLimit: projectRateLimit,
-						ProjectID:        projectID,
-					},
+				Description: model.ProjectRateLimitDescription{
+					ProjectRateLimit: projectRateLimit,
+					ProjectID:        projectID,
 				},
 			}
 			openaiChan <- value

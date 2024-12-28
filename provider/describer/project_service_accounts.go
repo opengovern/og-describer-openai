@@ -80,11 +80,9 @@ func processProjectServiceAccounts(ctx context.Context, handler *OpenAIAPIHandle
 			value := models.Resource{
 				ID:   projectServiceAccount.ID,
 				Name: projectServiceAccount.Name,
-				Description: JSONAllFieldsMarshaller{
-					Value: model.ProjectServiceAccountDescription{
-						ProjectServiceAccount: projectServiceAccount,
-						ProjectID:             projectID,
-					},
+				Description: model.ProjectServiceAccountDescription{
+					ProjectServiceAccount: projectServiceAccount,
+					ProjectID:             projectID,
 				},
 			}
 			openaiChan <- value

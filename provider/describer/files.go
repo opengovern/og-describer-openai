@@ -71,11 +71,9 @@ func processFiles(ctx context.Context, handler *OpenAIAPIHandler) ([]models.Reso
 	var values []models.Resource
 	for _, file := range files {
 		value := models.Resource{
-			ID:   file.ID,
-			Name: file.FileName,
-			Description: JSONAllFieldsMarshaller{
-				Value: file,
-			},
+			ID:          file.ID,
+			Name:        file.FileName,
+			Description: file,
 		}
 		values = append(values, value)
 	}

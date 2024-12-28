@@ -34,11 +34,9 @@ func GetModel(ctx context.Context, handler *OpenAIAPIHandler, resourceID string)
 		return nil, err
 	}
 	value := models.Resource{
-		ID:   modelData.ID,
-		Name: modelData.ID,
-		Description: JSONAllFieldsMarshaller{
-			Value: modelData,
-		},
+		ID:          modelData.ID,
+		Name:        modelData.ID,
+		Description: modelData,
 	}
 	return &value, nil
 }
@@ -66,11 +64,9 @@ func processModels(ctx context.Context, handler *OpenAIAPIHandler) ([]models.Res
 	var resources []models.Resource
 	for _, modelData := range modelResponse.Data {
 		value := models.Resource{
-			ID:   modelData.ID,
-			Name: modelData.ID,
-			Description: JSONAllFieldsMarshaller{
-				Value: modelData,
-			},
+			ID:          modelData.ID,
+			Name:        modelData.ID,
+			Description: modelData,
 		}
 		resources = append(resources, value)
 	}
