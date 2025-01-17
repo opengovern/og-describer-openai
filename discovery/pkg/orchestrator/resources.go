@@ -5,9 +5,9 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	model "github.com/opengovern/og-describer-github/discovery/pkg/models"
-	"github.com/opengovern/og-describer-github/discovery/describers"
-	"github.com/opengovern/og-describer-github/global/maps"
+	model "github.com/opengovern/og-describer-openai/discovery/pkg/models"
+	"github.com/opengovern/og-describer-openai/discovery/describers"
+	"github.com/opengovern/og-describer-openai/global/maps"
 	"github.com/opengovern/og-util/pkg/describe/enums"
 	"go.uber.org/zap"
 	"sort"
