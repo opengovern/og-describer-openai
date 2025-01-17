@@ -1,64 +1,64 @@
 [
   {
     "ResourceName": "OpenAI/Project",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListProjects)",
-    "GetDescriber": "DescribeSingleByOpenAI(describer.GetProject)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListProjects)",
+    "GetDescriber": "DescribeSingleByOpenAI(describers.GetProject)",
     "SteampipeTable": "openai_project",
     "Model": "Project"
   },
   {
     "ResourceName": "OpenAI/Project/ApiKey",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectAPIKeys)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListProjectAPIKeys)",
     "GetDescriber": "",
     "SteampipeTable": "openai_project_api_key",
     "Model": "ProjectApiKey"
   },
   {
     "ResourceName": "OpenAI/Project/RateLimit",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectRateLimits)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListProjectRateLimits)",
     "GetDescriber": "",
     "SteampipeTable": "openai_project_rate_limit",
     "Model": "ProjectRateLimit"
   },
   {
     "ResourceName": "OpenAI/Project/ServiceAccount",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectServiceAccounts)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListProjectServiceAccounts)",
     "GetDescriber": "",
     "SteampipeTable": "openai_project_service_account",
     "Model": "ProjectServiceAccount"
   },
   {
     "ResourceName": "OpenAI/Project/User",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListProjectUsers)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListProjectUsers)",
     "GetDescriber": "",
     "SteampipeTable": "openai_project_user",
     "Model": "ProjectUser"
   },
   {
     "ResourceName": "OpenAI/Model",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListModels)",
-    "GetDescriber": "DescribeSingleByOpenAI(describer.GetModel)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListModels)",
+    "GetDescriber": "DescribeSingleByOpenAI(describers.GetModel)",
     "SteampipeTable": "openai_model",
     "Model": "Models"
   },
   {
     "ResourceName": "OpenAI/File",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListFiles)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListFiles)",
     "GetDescriber": "",
     "SteampipeTable": "openai_file",
     "Model": "File"
   },
   {
     "ResourceName": "OpenAI/VectorStore",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListVectorStores)",
-    "GetDescriber": "DescribeSingleByOpenAI(describer.GetVectorStore)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListVectorStores)",
+    "GetDescriber": "DescribeSingleByOpenAI(describers.GetVectorStore)",
     "SteampipeTable": "openai_vector_store",
     "Model": "VectorStore"
   },
   {
     "ResourceName": "OpenAI/Assistant",
-    "ListDescriber": "DescribeListByOpenAI(describer.ListAssistants)",
-    "GetDescriber": "DescribeSingleByOpenAI(describer.GetAssistant)",
+    "ListDescriber": "DescribeListByOpenAI(describers.ListAssistants)",
+    "GetDescriber": "DescribeSingleByOpenAI(describers.GetAssistant)",
     "SteampipeTable": "openai_assistant",
     "Model": "Assistant"
   }

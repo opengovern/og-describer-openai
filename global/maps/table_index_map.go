@@ -5,7 +5,7 @@ import (
 )
 
 var ResourceTypesToTables = map[string]string{
-   "OpenAI/Project": "openai_project",
+  "OpenAI/Project": "openai_project",
   "OpenAI/Project/ApiKey": "openai_project_api_key",
   "OpenAI/Project/RateLimit": "openai_project_rate_limit",
   "OpenAI/Project/ServiceAccount": "openai_project_service_account",
@@ -29,7 +29,7 @@ var ResourceTypeToDescription = map[string]interface{}{
 }
 
 var TablesToResourceTypes = map[string]string{
- "openai_project": "OpenAI/Project",
+  "openai_project": "OpenAI/Project",
   "openai_project_api_key": "OpenAI/Project/ApiKey",
   "openai_project_rate_limit": "OpenAI/Project/RateLimit",
   "openai_project_service_account": "OpenAI/Project/ServiceAccount",
