@@ -2,14 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/opengovern/og-describer-github/platform/constants"
-	"strconv"
-
+	"github.com/opengovern/og-describer-openai/platform/constants"
+"crypto/sha256"
 	"github.com/jackc/pgtype"
-	"github.com/opengovern/og-describer-github/global"
-	"github.com/opengovern/og-describer-github/global/maps"
+	"github.com/opengovern/og-describer-openai/global"
+	"github.com/opengovern/og-describer-openai/global/maps"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
+	"encoding/hex"
+
 )
 
 type Integration struct{}
@@ -40,14 +41,7 @@ func (i *Integration) HealthCheck(jsonData []byte, providerId string, labels map
 		return false, err
 	}
 
-	var name string
-	if v, ok := labels["OrganizationName"]; ok {
-		name = v
-	}
-	isHealthy, err := GithubIntegrationHealthcheck(Config{
-		Token:            credentials.PatToken,
-		OrganizationName: name,
-	})
+	isHealthy, err := OpenAIIntegrationHealthcheck(credentials.APIKey)
 	return isHealthy, err
 }
 
@@ -58,31 +52,29 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integ
 		return nil, err
 	}
 	var integrations []integration.Integration
-	accounts, err := GithubIntegrationDiscovery(Config{
-		Token: credentials.PatToken,
-	})
+	_, err = OpenAIIntegrationHealthcheck(credentials.APIKey)
 	if err != nil {
 		return nil, err
 	}
-	for _, a := range accounts {
-		labels := map[string]string{
-			"OrganizationName": a.Login,
-		}
-		labelsJsonData, err := json.Marshal(labels)
-		if err != nil {
-			return nil, err
-		}
-		integrationLabelsJsonb := pgtype.JSONB{}
-		err = integrationLabelsJsonb.Set(labelsJsonData)
-		if err != nil {
-			return nil, err
-		}
-		integrations = append(integrations, integration.Integration{
-			ProviderID: strconv.FormatInt(a.ID, 10),
-			Name:       a.Login,
-			Labels:     integrationLabelsJsonb,
-		})
+	labels := map[string]string{
+		"OrganizationID": credentials.OrganizationID,
 	}
+	labelsJsonData, err := json.Marshal(labels)
+	if err != nil {
+		return nil, err
+	}
+	integrationLabelsJsonb := pgtype.JSONB{}
+	err = integrationLabelsJsonb.Set(labelsJsonData)
+	if err != nil {
+		return nil, err
+	}
+	providerID := hashSHA256(credentials.APIKey)
+	integrations = append(integrations, integration.Integration{
+		ProviderID: providerID,
+		Name:       credentials.ProjectName,
+		Labels:     integrationLabelsJsonb,
+	})
+
 	return integrations, nil
 }
 
@@ -126,4 +118,14 @@ func (i *Integration) ListAllTables() (map[string][]interfaces.CloudQLColumn, er
 
 func (i *Integration) Ping() error {
 	return nil
+}
+
+
+func hashSHA256(input string) string {
+	hash := sha256.New()
+
+	hash.Write([]byte(input))
+
+	hashedBytes := hash.Sum(nil)
+	return hex.EncodeToString(hashedBytes)
 }
