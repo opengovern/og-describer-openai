@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/opengovern/og-describer-github/discovery/pkg/orchestrator"
-	model "github.com/opengovern/og-describer-github/discovery/pkg/models"
-	"github.com/opengovern/og-describer-github/discovery/provider"
-	"github.com/opengovern/og-describer-github/global"
+	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
+	model "github.com/opengovern/og-describer-openai/discovery/pkg/models"
+	"github.com/opengovern/og-describer-openai/discovery/provider"
+	"github.com/opengovern/og-describer-openai/global"
 	"github.com/opengovern/og-util/pkg/describe"
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/spf13/cobra"
@@ -21,9 +21,7 @@ import (
 
 var (
 	resourceID       string
-	PatToken         = os.Getenv("PAT_TOKEN")
-	RepositoryName   = os.Getenv("REPOSITORY_NAME")
-	OrganizationName = os.Getenv("ORGANIZATION_NAME")
+	
 )
 
 // getDescriberCmd represents the describer command
@@ -47,7 +45,7 @@ var getDescriberCmd = &cobra.Command{
 			IntegrationType: global.IntegrationTypeLower,
 			CipherText:      "",
 			IntegrationLabels: map[string]string{
-				"OrganizationName": OrganizationName,
+				
 			},
 			IntegrationAnnotations: nil,
 		}
@@ -56,7 +54,6 @@ var getDescriberCmd = &cobra.Command{
 		logger, _ := zap.NewProduction()
 
 		creds, err := provider.AccountCredentialsFromMap(map[string]any{
-			"pat_token": PatToken,
 		})
 		if err != nil {
 			return fmt.Errorf(" account credentials: %w", err)
@@ -67,7 +64,6 @@ var getDescriberCmd = &cobra.Command{
 			return err
 		}
 		plg := global.Plugin()
-		additionalParameters["RepositoryName"] = RepositoryName
 
 		f := func(resource model.Resource) error {
 			if resource.Description == nil {

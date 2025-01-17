@@ -5,16 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/opengovern/og-describer-github/global"
+	"github.com/opengovern/og-describer-openai/global"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/opengovern/og-describer-github/discovery/pkg/orchestrator"
-	model "github.com/opengovern/og-describer-github/discovery/pkg/models"
-	"github.com/opengovern/og-describer-github/discovery/provider"
+	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
+	model "github.com/opengovern/og-describer-openai/discovery/pkg/models"
+	"github.com/opengovern/og-describer-openai/discovery/provider"
 	"github.com/opengovern/og-util/pkg/describe"
 	"github.com/opengovern/og-util/pkg/es"
 	"github.com/spf13/cobra"
@@ -32,16 +32,8 @@ var describerCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Environment takes priority
-		orgEnv := os.Getenv("GITHUB_ORG")
-		patEnv := os.Getenv("GITHUB_PAT")
-
-		if orgEnv != "" {
-			OrganizationName = orgEnv
-		}
-
-		if patEnv != "" {
-			PatToken = patEnv
-		}
+		
+	
 
 		// Open the output file
 		file, err := os.Create(outputFile)
@@ -59,7 +51,7 @@ var describerCmd = &cobra.Command{
 			IntegrationType: global.IntegrationTypeLower,
 			CipherText:      "",
 			IntegrationLabels: map[string]string{
-				"OrganizationName": OrganizationName,
+				
 			},
 			IntegrationAnnotations: nil,
 		}
@@ -68,7 +60,6 @@ var describerCmd = &cobra.Command{
 		logger, _ := zap.NewProduction()
 
 		creds, err := provider.AccountCredentialsFromMap(map[string]any{
-			"pat_token": PatToken,
 		})
 		if err != nil {
 			return fmt.Errorf(" account credentials: %w", err)

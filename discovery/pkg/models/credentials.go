@@ -2,5 +2,9 @@ package models
 
 
 type IntegrationCredentials struct {
-	PatToken string `json:"pat_token"`
+	APIKey         string `json:"api_key"`
+	ProjectID      string `json:"project_id"`
+	ProjectName    string `json:"project_name"`
+	OrganizationID string `json:"organization_id"`
 }
+
