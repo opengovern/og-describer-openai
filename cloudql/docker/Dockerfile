@@ -1,3 +1,3 @@
 FROM alpine:latest
 
-COPY ../build/steampipe-plugin-github.plugin /steampipe-plugin-github.plugin
+COPY ../build/steampipe-plugin-openai.plugin /steampipe-plugin-openai.plugin
