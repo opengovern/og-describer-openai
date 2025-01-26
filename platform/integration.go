@@ -1,16 +1,15 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
-	"github.com/opengovern/og-describer-openai/platform/constants"
-"crypto/sha256"
 	"github.com/jackc/pgtype"
 	"github.com/opengovern/og-describer-openai/global"
 	"github.com/opengovern/og-describer-openai/global/maps"
+	"github.com/opengovern/og-describer-openai/platform/constants"
 	"github.com/opengovern/og-util/pkg/integration"
 	"github.com/opengovern/og-util/pkg/integration/interfaces"
-	"encoding/hex"
-
 )
 
 type Integration struct{}
@@ -52,7 +51,7 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integ
 		return nil, err
 	}
 	var integrations []integration.Integration
-	_, err = OpenAIIntegrationHealthcheck(credentials.APIKey)
+	_, err = OpenAIIntegrationDiscovery(credentials.APIKey)
 	if err != nil {
 		return nil, err
 	}
@@ -79,18 +78,18 @@ func (i *Integration) DiscoverIntegrations(jsonData []byte) ([]integration.Integ
 }
 
 func (i *Integration) GetResourceTypesByLabels(labels map[string]string) ([]interfaces.ResourceTypeConfiguration, error) {
-	var resourceTypesMap  []interfaces.ResourceTypeConfiguration
+	var resourceTypesMap []interfaces.ResourceTypeConfiguration
 	for _, resourceType := range maps.ResourceTypesList {
-		var resource  interfaces.ResourceTypeConfiguration
+		var resource interfaces.ResourceTypeConfiguration
 		if v, ok := maps.ResourceTypeConfigs[resourceType]; ok {
-			resource.Description =v.Description
-			resource.Params =v.Params
+			resource.Description = v.Description
+			resource.Params = v.Params
 			resource.Name = v.Name
 			resource.IntegrationType = v.IntegrationType
-			resource.Table =  maps.ResourceTypesToTables[v.Name]
+			resource.Table = maps.ResourceTypesToTables[v.Name]
 			resourceTypesMap = append(resourceTypesMap, resource)
-			
-		} 
+
+		}
 	}
 	return resourceTypesMap, nil
 }
@@ -124,7 +123,6 @@ func (i *Integration) ListAllTables() (map[string][]interfaces.CloudQLColumn, er
 func (i *Integration) Ping() error {
 	return nil
 }
-
 
 func hashSHA256(input string) string {
 	hash := sha256.New()

@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
 	model "github.com/opengovern/og-describer-openai/discovery/pkg/models"
+	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
 	"github.com/opengovern/og-describer-openai/discovery/provider"
 	"github.com/opengovern/og-util/pkg/describe"
 	"github.com/opengovern/og-util/pkg/es"
@@ -32,8 +32,6 @@ var describerCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Environment takes priority
-		
-	
 
 		// Open the output file
 		file, err := os.Create(outputFile)
@@ -43,16 +41,14 @@ var describerCmd = &cobra.Command{
 		defer file.Close() // Ensure the file is closed at the end
 
 		job := describe.DescribeJob{
-			JobID:           uint(uuid.New().ID()),
-			ResourceType:    resourceType,
-			IntegrationID:   "",
-			ProviderID:      "",
-			DescribedAt:     time.Now().UnixMilli(),
-			IntegrationType: global.IntegrationTypeLower,
-			CipherText:      "",
-			IntegrationLabels: map[string]string{
-				
-			},
+			JobID:                  uint(uuid.New().ID()),
+			ResourceType:           resourceType,
+			IntegrationID:          "",
+			ProviderID:             "",
+			DescribedAt:            time.Now().UnixMilli(),
+			IntegrationType:        global.IntegrationTypeLower,
+			CipherText:             "",
+			IntegrationLabels:      map[string]string{},
 			IntegrationAnnotations: nil,
 		}
 
@@ -60,6 +56,10 @@ var describerCmd = &cobra.Command{
 		logger, _ := zap.NewProduction()
 
 		creds, err := provider.AccountCredentialsFromMap(map[string]any{
+			"api_key":         APIKey,
+			"project_id":      ProjectID,
+			"project_name":    ProjectName,
+			"organization_id": OrganizationID,
 		})
 		if err != nil {
 			return fmt.Errorf(" account credentials: %w", err)

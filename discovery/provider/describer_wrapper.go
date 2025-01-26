@@ -12,21 +12,24 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/time/rate"
 )
+
 type OpenAIAPIHandler struct {
 	Client         *http.Client
 	APIKey         string
 	OrganizationID string
+	ProjectID      string
 	RateLimiter    *rate.Limiter
 	Semaphore      chan struct{}
 	MaxRetries     int
 	RetryBackoff   time.Duration
 }
 
-func NewOpenAIAPIHandler(apiKey string, orgID string, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
+func NewOpenAIAPIHandler(apiKey, orgID, projectID string, rateLimit rate.Limit, burst int, maxConcurrency int, maxRetries int, retryBackoff time.Duration) *OpenAIAPIHandler {
 	return &OpenAIAPIHandler{
 		Client:         http.DefaultClient,
 		APIKey:         apiKey,
 		OrganizationID: orgID,
+		ProjectID:      projectID,
 		RateLimiter:    rate.NewLimiter(rateLimit, burst),
 		Semaphore:      make(chan struct{}, maxConcurrency),
 		MaxRetries:     maxRetries,
@@ -93,6 +96,7 @@ func (h *OpenAIAPIHandler) DoRequest(ctx context.Context, req *http.Request, req
 	}
 	return err
 }
+
 // isTemporary checks if an error is temporary.
 func isTemporary(err error) bool {
 	if err == nil {
@@ -105,13 +109,14 @@ func isTemporary(err error) bool {
 	return false
 }
 
-
 var (
 	triggerTypeKey string = "trigger_type"
 )
+
 func WithTriggerType(ctx context.Context, tt enums.DescribeTriggerType) context.Context {
 	return context.WithValue(ctx, triggerTypeKey, tt)
 }
+
 // DescribeListByOpenAI A wrapper to pass openai authorization to describer list functions
 func DescribeListByOpenAI(describe func(context.Context, *OpenAIAPIHandler, *model.StreamSender) ([]model.Resource, error)) model.ResourceDescriber {
 	return func(ctx context.Context, cfg model.IntegrationCredentials, triggerType enums.DescribeTriggerType, additionalParameters map[string]string, stream *model.StreamSender) ([]model.Resource, error) {
@@ -124,9 +129,10 @@ func DescribeListByOpenAI(describe func(context.Context, *OpenAIAPIHandler, *mod
 		}
 		// Get organization ID
 		organizationID := cfg.OrganizationID
+		projectID := cfg.ProjectID
 
 		// Create openai handler
-		openAIAPIHandler := NewOpenAIAPIHandler(apiKey, organizationID, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
+		openAIAPIHandler := NewOpenAIAPIHandler(apiKey, organizationID, projectID, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
 
 		// Get values from describer
 		var values []model.Resource
@@ -141,7 +147,7 @@ func DescribeListByOpenAI(describe func(context.Context, *OpenAIAPIHandler, *mod
 
 // DescribeSingleByOpenAI A wrapper to pass openai authorization to describer get functions
 func DescribeSingleByOpenAI(describe func(context.Context, *OpenAIAPIHandler, string) (*model.Resource, error)) model.SingleResourceDescriber {
-	return func(ctx context.Context, cfg model.IntegrationCredentials, triggerType enums.DescribeTriggerType, additionalParameters map[string]string,resourceID string,stream *model.StreamSender ) (*model.Resource, error) {
+	return func(ctx context.Context, cfg model.IntegrationCredentials, triggerType enums.DescribeTriggerType, additionalParameters map[string]string, resourceID string, stream *model.StreamSender) (*model.Resource, error) {
 		ctx = WithTriggerType(ctx, triggerType)
 
 		// Get apikey and check it has value
@@ -151,9 +157,10 @@ func DescribeSingleByOpenAI(describe func(context.Context, *OpenAIAPIHandler, st
 		}
 		// Get organization ID
 		organizationID := cfg.OrganizationID
+		projectID := cfg.ProjectID
 
 		// Create openai handler
-		openAIAPIHandler := NewOpenAIAPIHandler(apiKey, organizationID, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
+		openAIAPIHandler := NewOpenAIAPIHandler(apiKey, organizationID, projectID, rate.Every(time.Second/4), 1, 10, 5, 5*time.Minute)
 
 		// Get value from describer
 		value, err := describe(ctx, openAIAPIHandler, resourceID)

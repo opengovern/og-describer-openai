@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
 	model "github.com/opengovern/og-describer-openai/discovery/pkg/models"
+	"github.com/opengovern/og-describer-openai/discovery/pkg/orchestrator"
 	"github.com/opengovern/og-describer-openai/discovery/provider"
 	"github.com/opengovern/og-describer-openai/global"
 	"github.com/opengovern/og-util/pkg/describe"
@@ -20,8 +20,11 @@ import (
 )
 
 var (
-	resourceID       string
-	
+	resourceID     string
+	APIKey         = os.Getenv("API_KEY")         //example credes
+	OrganizationID = os.Getenv("ORGANIZATION_ID") // example parameter
+	ProjectID      = os.Getenv("PROJECT_ID")
+	ProjectName    = os.Getenv("PROJECT_NAME")
 )
 
 // getDescriberCmd represents the describer command
@@ -37,16 +40,14 @@ var getDescriberCmd = &cobra.Command{
 		defer file.Close() // Ensure the file is closed at the end
 
 		job := describe.DescribeJob{
-			JobID:           uint(uuid.New().ID()),
-			ResourceType:    resourceType,
-			IntegrationID:   "",
-			ProviderID:      "",
-			DescribedAt:     time.Now().UnixMilli(),
-			IntegrationType: global.IntegrationTypeLower,
-			CipherText:      "",
-			IntegrationLabels: map[string]string{
-				
-			},
+			JobID:                  uint(uuid.New().ID()),
+			ResourceType:           resourceType,
+			IntegrationID:          "",
+			ProviderID:             "",
+			DescribedAt:            time.Now().UnixMilli(),
+			IntegrationType:        global.IntegrationTypeLower,
+			CipherText:             "",
+			IntegrationLabels:      map[string]string{},
 			IntegrationAnnotations: nil,
 		}
 
@@ -54,6 +55,10 @@ var getDescriberCmd = &cobra.Command{
 		logger, _ := zap.NewProduction()
 
 		creds, err := provider.AccountCredentialsFromMap(map[string]any{
+			"api_key":         APIKey,
+			"project_id":      ProjectID,
+			"project_name":    ProjectName,
+			"organization_id": OrganizationID,
 		})
 		if err != nil {
 			return fmt.Errorf(" account credentials: %w", err)

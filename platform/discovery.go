@@ -10,27 +10,28 @@ import (
 
 type OrganizationResponse struct {
 	Data []struct {
-		ID string `json:"id"`
-		Personal bool `json:"personal"`
-	Projects       struct {
-		Data []struct {
-			ID   string `json:"id"`
-			Title string `json:"title"`
+		ID       string `json:"id"`
+		Personal bool   `json:"personal"`
+		Projects struct {
+			Data []struct {
+				ID    string `json:"id"`
+				Title string `json:"title"`
+			}
 		}
-	}
 	}
 }
 
 type OrganizationResponseData struct {
-	ID string `json:"id"`
-		Personal bool `json:"personal"`
-	Projects       struct {
+	ID       string `json:"id"`
+	Personal bool   `json:"personal"`
+	Projects struct {
 		Data []struct {
-			ID   string `json:"id"`
+			ID    string `json:"id"`
 			Title string `json:"title"`
 		}
 	}
 }
+
 func OpenAIIntegrationDiscovery(apiKey string) (*OrganizationResponse, error) {
 	if apiKey == "" {
 		return nil, errors.New("API key is required")
@@ -71,4 +72,3 @@ func OpenAIIntegrationDiscovery(apiKey string) (*OrganizationResponse, error) {
 
 	return &orgResponse, nil
 }
-
