@@ -8,19 +8,16 @@ import (
 	model "github.com/opengovern/og-describer-openai/discovery/provider"
 	"net/http"
 	"net/url"
-	"sync"
 )
 
 func ListProjects(ctx context.Context, handler *model.OpenAIAPIHandler, stream *models.StreamSender) ([]models.Resource, error) {
-	var wg sync.WaitGroup
-	openaiChan := make(chan models.Resource)
-	go func() {
-		processProjects(ctx, handler, openaiChan, &wg)
-		wg.Wait()
-		close(openaiChan)
-	}()
+	results, err := processProjects(ctx, handler)
+	if err != nil {
+		return nil, err
+	}
+
 	var values []models.Resource
-	for value := range openaiChan {
+	for _, value := range results {
 		if stream != nil {
 			if err := (*stream)(value); err != nil {
 				return nil, err
@@ -45,73 +42,72 @@ func GetProject(ctx context.Context, handler *model.OpenAIAPIHandler, resourceID
 	return &value, nil
 }
 
-func processProjects(ctx context.Context, handler *model.OpenAIAPIHandler, openaiChan chan<- models.Resource, wg *sync.WaitGroup) {
+func processProjects(ctx context.Context, handler *model.OpenAIAPIHandler) ([]models.Resource, error) {
 	var projects []model.ProjectDescription
 	var projectResponse model.ProjectResponse
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/organization/projects"
-	requestFunc := func(req *http.Request) (*http.Response, error) {
-		var e error
+	for {
 		var after string
-		for {
-			params := url.Values{}
-			params.Set("limit", "100")
-			if after != "" {
-				params.Set("after", after)
-			}
-			finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
-			req, e = http.NewRequest("GET", finalURL, nil)
-			if e != nil {
-				return nil, e
-			}
+		params := url.Values{}
+		params.Set("limit", "100")
+		if after != "" {
+			params.Set("after", after)
+		}
+		finalURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
+		req, err := http.NewRequest("GET", finalURL, nil)
+		if err != nil {
+			return nil, err
+		}
+		requestFunc := func(req *http.Request) (*http.Response, error) {
+			var e error
 			resp, e = handler.Client.Do(req)
 			if e = json.NewDecoder(resp.Body).Decode(&projectResponse); e != nil {
 				return nil, e
 			}
 			projects = append(projects, projectResponse.Data...)
-			if !projectResponse.HasMore {
-				break
-			}
-			after = projectResponse.LastID
+			return resp, e
 		}
-		return resp, e
+		err = handler.DoRequest(ctx, req, requestFunc)
+		if err != nil {
+			return nil, err
+		}
+		after = projectResponse.LastID
+		if !projectResponse.HasMore {
+			break
+		}
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
-	if err != nil {
-		return
-	}
+
+	var results []models.Resource
 	for _, project := range projects {
-		wg.Add(1)
-		go func(project model.ProjectDescription) {
-			defer wg.Done()
-			value := models.Resource{
-				ID:          project.ID,
-				Name:        project.Name,
-				Description: project,
-			}
-			openaiChan <- value
-		}(project)
+		value := models.Resource{
+			ID:          project.ID,
+			Name:        project.Name,
+			Description: project,
+		}
+		results = append(results, value)
 	}
+	return results, nil
 }
 
 func processProject(ctx context.Context, handler *model.OpenAIAPIHandler, resourceID string) (*model.ProjectDescription, error) {
 	var project *model.ProjectDescription
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/organization/projects/"
+	finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+	req, err := http.NewRequest("GET", finalURL, nil)
+	if err != nil {
+		return nil, err
+	}
 	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
-		req, e = http.NewRequest("GET", finalURL, nil)
-		if e != nil {
-			return nil, e
-		}
 		resp, e = handler.Client.Do(req)
 		if e = json.NewDecoder(resp.Body).Decode(project); e != nil {
 			return nil, e
 		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
+	err = handler.DoRequest(ctx, req, requestFunc)
 	if err != nil {
 		return nil, err
 	}

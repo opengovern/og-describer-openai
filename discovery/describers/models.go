@@ -77,20 +77,20 @@ func processModel(ctx context.Context, handler *model.OpenAIAPIHandler, resource
 	var modelData *model.ModelsDescription
 	var resp *http.Response
 	baseURL := "https://api.openai.com/v1/models/"
+	finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
+	req, err := http.NewRequest("GET", finalURL, nil)
+	if err != nil {
+		return nil, err
+	}
 	requestFunc := func(req *http.Request) (*http.Response, error) {
 		var e error
-		finalURL := fmt.Sprintf("%s%s", baseURL, resourceID)
-		req, e = http.NewRequest("GET", finalURL, nil)
-		if e != nil {
-			return nil, e
-		}
 		resp, e = handler.Client.Do(req)
 		if e = json.NewDecoder(resp.Body).Decode(modelData); e != nil {
 			return nil, e
 		}
 		return resp, e
 	}
-	err := handler.DoRequest(ctx, &http.Request{}, requestFunc)
+	err = handler.DoRequest(ctx, req, requestFunc)
 	if err != nil {
 		return nil, err
 	}
